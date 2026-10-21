@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation Code Studio</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        html,body{
+            font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+            background:#000;color:#e0e0e0;
+            height:100%;overflow:hidden;
+        }
+        body{
+            border:3px solid #1a1a3e;
+        }
+        .top-bar{
+            position:fixed;top:0;left:0;right:0;z-index:9999;
+            display:flex;align-items:center;gap:8px;
+            padding:8px 12px;background:#111128;
+            border-bottom:2px solid #e94560;
+            flex-wrap:wrap;
+        }
+        .top-bar .group{display:flex;align-items:center;gap:6px;font-size:12px;color:#888}
+        .top-bar input,.top-bar select{
+            background:#1a1a3e;border:1px solid #2a2a5e;
+            color:#e0e0e0;padding:4px 8px;font-size:12px;outline:none;max-width:80px;
+        }
+        .top-bar input[type="number"]{width:60px}
+        .top-bar input:focus,.top-bar select:focus{border-color:#e94560}
+        .btn{
+            padding:6px 14px;border:none;cursor:pointer;font-size:12px;font-weight:600;
+            transition:all 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap;
+        }
+        .btn:hover:not(:disabled){filter:brightness(1.2)}
+        .btn:active:not(:disabled){transform:translateY(0)}
+        .btn-run{background:#e94560;color:#fff}
+        .btn-record{background:#0f3460;color:#fff}
+        .btn-record.recording{background:#c0392b}
+        .btn-download{background:#533483;color:#fff}
+        .btn-clear{background:#2d3436;color:#fff}
+        .btn:disabled{opacity:0.4;cursor:not-allowed}
+        .spacer{flex:1}
+        .container{
+            display:flex;flex-direction:column;
+            height:100vh;width:100vw;
+            padding-top:45px;
+            overflow:hidden;
+        }
+        .main-area{display:flex;flex:1;overflow:hidden;min-height:0}
+        .editor-panel{
+            width:50%;display:flex;flex-direction:column;
+            border-right:2px solid #16213e;min-width:0;
+        }
+        .code-editor{
+            flex:1;min-height:0;background:#000;color:#c8d6e5;border:none;
+            padding:16px;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;
+            font-size:13px;line-height:1.7;resize:none;outline:none;tab-size:2;
+            overflow:auto;-webkit-overflow-scrolling:touch;
+        }
+        .code-editor:focus{background:#0a0a15}
+        .code-editor.locked{
+            opacity:0.6;
+        }
+        .preview-panel{
+            flex:1;display:flex;flex-direction:column;
+            background:#000;min-width:0;
+        }
+        .panel-header{
+            padding:10px 16px;background:#111128;
+            border-bottom:1px solid #1a1a3e;display:flex;
+            justify-content:space-between;align-items:center;flex-shrink:0;
+        }
+        .panel-title{
+            font-size:13px;font-weight:600;color:#e94560;
+            display:flex;align-items:center;gap:8px;
+        }
+        .panel-title::before{
+            content:'';display:inline-block;width:8px;height:8px;
+            background:#e94560;border-radius:50%;
+        }
+        .preview-area{
+            flex:1;display:flex;justify-content:center;
+            align-items:center;background:#000;position:relative;overflow:hidden;
+        }
+        .canvas-wrapper{position:relative;max-width:100%;max-height:100%}
+        canvas{display:block;background:#000;max-width:100%;max-height:100%;object-fit:contain}
+        .status-bar{
+            padding:6px 16px;background:#0a0a15;
+            border-top:1px solid #1a1a3e;font-size:11px;
+            color:#666;display:flex;justify-content:space-between;flex-shrink:0;
+        }
+        .status-bar .left,.status-bar .right{display:flex;align-items:center;gap:12px}
+        .status-indicator{
+            display:inline-block;width:8px;height:8px;
+            background:#00b894;border-radius:50%;margin-right:4px;
+        }
+        .status-indicator.recording{background:#e74c3c;animation:blink 1s infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+        .toast{
+            position:fixed;top:60px;right:20px;padding:12px 20px;
+            background:#1a1a3e;border-left:4px solid #e94560;
+            font-size:13px;z-index:10000;
+            transform:translateX(120%);transition:transform 0.3s ease;
+            box-shadow:0 4px 12px rgba(0,0,0,0.4);
+        }
+        .toast.show{transform:translateX(0)}
+        .toast.success{border-left-color:#00b894}
+        .toast.error{border-left-color:#e74c3c}
+        .recording-overlay{
+            position:absolute;top:12px;right:12px;
+            display:flex;align-items:center;gap:6px;
+            background:rgba(0,0,0,0.7);padding:6px 12px;
+            font-size:12px;color:#e74c3c;display:none;
+        }
+        .recording-overlay.active{display:flex}
+        .recording-dot{
+            width:10px;height:10px;background:#e74c3c;
+            border-radius:50%;animation:blink 1s infinite;
+        }
+        .fps-counter{
+            position:absolute;top:12px;left:12px;
+            background:rgba(0,0,0,0.6);padding:4px 10px;
+            font-size:11px;color:#00b894;font-family:monospace;
+        }
+        @media(max-width:768px){
+            .main-area{flex-direction:column}
+            .editor-panel{width:100%;height:50%;border-right:none;border-bottom:2px solid #16213e}
+            .top-bar{padding:6px 8px;gap:4px}
+            .btn{padding:5px 10px;font-size:11px}
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="group"><label>W</label><input type="number" id="canvasWidth" value="1280" min="100" max="3840"></div>
+        <div class="group"><label>H</label><input type="number" id="canvasHeight" value="720" min="100" max="2160"></div>
+        <div class="group"><label>FPS</label><select id="fpsSelect"><option value="24">24</option><option value="30">30</option><option value="60" selected>60</option><option value="120">120</option><option value="144">144</option></select></div>
+        <div class="spacer"></div>
+        <button class="btn btn-run" id="runBtn">&#9654; Run</button>
+        <button class="btn btn-clear" id="clearBtn">&#10005; Clear</button>
+        <button class="btn btn-record" id="recordBtn">&#9679; Record</button>
+        <button class="btn btn-download" id="downloadBtn" disabled>&#8595; Download</button>
+    </div>
+    <div class="container">
+        <div class="main-area">
+            <div class="editor-panel">
+                <div class="panel-header"><div class="panel-title">Editor</div><div style="font-size:11px;color:#555" id="editorStatus">Click to edit</div></div>
+                <textarea class="code-editor locked" id="codeEditor" spellcheck="false" placeholder="function animate() {
+  // Available: canvas, ctx, width, height, t, dt, frame
+}"></textarea>
+            </div>
+            <div class="preview-panel">
+                <div class="panel-header"><div class="panel-title">Preview</div><div style="font-size:11px;color:#555" id="sizeLabel">1280 x 720</div></div>
+                <div class="preview-area" id="previewArea">
+                    <div class="canvas-wrapper"><canvas id="previewCanvas"></canvas></div>
+                    <div class="fps-counter" id="fpsCounter">-- FPS</div>
+                    <div class="recording-overlay" id="recordingOverlay"><div class="recording-dot"></div><span id="recordTimer">00:00</span></div>
+                </div>
+                <div class="status-bar">
+                    <div class="left"><span class="status-indicator" id="statusDot"></span><span id="statusText">Ready</span></div>
+                    <div class="right"><span id="frameInfo">Frame: 0</span><span id="timeInfo">Time: 0.00s</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <script>
+        const previewCanvasElement=document.getElementById('previewCanvas');
+        const renderContext=previewCanvasElement.getContext('2d');
+        const codeEditorElement=document.getElementById('codeEditor');
+        const runButton=document.getElementById('runBtn');
+        const clearButton=document.getElementById('clearBtn');
+        const recordButton=document.getElementById('recordBtn');
+        const downloadButton=document.getElementById('downloadBtn');
+        const canvasWidthInput=document.getElementById('canvasWidth');
+        const canvasHeightInput=document.getElementById('canvasHeight');
+        const frameRateSelector=document.getElementById('fpsSelect');
+        const sizeLabelElement=document.getElementById('sizeLabel');
+        const fpsCounterElement=document.getElementById('fpsCounter');
+        const recordingOverlayElement=document.getElementById('recordingOverlay');
+        const recordTimerElement=document.getElementById('recordTimer');
+        const statusIndicatorElement=document.getElementById('statusDot');
+        const statusLabelElement=document.getElementById('statusText');
+        const frameInfoLabel=document.getElementById('frameInfo');
+        const timeInfoLabel=document.getElementById('timeInfo');
+        const toastElement=document.getElementById('toast');
+        const editorStatusLabel=document.getElementById('editorStatus');
+
+        let animationFrameRequest=null;
+        let mediaRecorderInstance=null;
+        let recordedChunksBuffer=[];
+        let isRecordingSession=false;
+        let renderedFrameCount=0;
+        let animationStartTimestamp=0;
+        let previousFrameTimestamp=0;
+        let fpsSampleCount=0;
+        let fpsSampleTimestamp=0;
+        let measuredFrameRate=0;
+        let recordingStartTimestamp=0;
+        let recordingTimerHandle=null;
+        let isAnimationLoopActive=false;
+        let lastDownloadBlobUrl=null;
+
+        function showNotification(message,variant=''){
+            toastElement.textContent=message;
+            toastElement.className='toast show '+variant;
+            setTimeout(()=>toastElement.className='toast',2500);
+        }
+
+        function updateStatusText(text,recording=false){
+            statusLabelElement.textContent=text;
+            statusIndicatorElement.className='status-indicator'+(recording?' recording':'');
+        }
+
+        function readTargetFrameRate(){
+            return parseInt(frameRateSelector.value)||60;
+        }
+
+        function syncCanvasDimensions(){
+            const targetWidth=parseInt(canvasWidthInput.value)||1280;
+            const targetHeight=parseInt(canvasHeightInput.value)||720;
+            previewCanvasElement.width=targetWidth;
+            previewCanvasElement.height=targetHeight;
+            sizeLabelElement.textContent=targetWidth+' x '+targetHeight;
+            if(!isAnimationLoopActive){
+                renderContext.fillStyle='#000000';
+                renderContext.fillRect(0,0,targetWidth,targetHeight);
+            }
+        }
+
+        function stopAnimationLoop(){
+            if(animationFrameRequest){
+                cancelAnimationFrame(animationFrameRequest);
+                animationFrameRequest=null;
+            }
+            isAnimationLoopActive=false;
+        }
+
+        function revokeLastDownloadUrl(){
+            if(lastDownloadBlobUrl){
+                URL.revokeObjectURL(lastDownloadBlobUrl);
+                lastDownloadBlobUrl=null;
+            }
+        }
+
+        codeEditorElement.addEventListener('focus',function(){
+            codeEditorElement.classList.remove('locked');
+            editorStatusLabel.textContent='Editing...';
+        });
+
+        codeEditorElement.addEventListener('blur',function(){
+            codeEditorElement.classList.add('locked');
+            editorStatusLabel.textContent='Click to edit';
+        });
+
+        codeEditorElement.addEventListener('keydown',function(event){
+            if(event.key==='Tab'){
+                event.preventDefault();
+                const selectionStart=codeEditorElement.selectionStart;
+                const selectionEnd=codeEditorElement.selectionEnd;
+                codeEditorElement.value=codeEditorElement.value.substring(0,selectionStart)+'  '+codeEditorElement.value.substring(selectionEnd);
+                codeEditorElement.selectionStart=codeEditorElement.selectionEnd=selectionStart+2;
+            }
+            if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){
+                event.preventDefault();
+                executeUserCode();
+            }
+        });
+
+        function executeUserCode(){
+            stopAnimationLoop();
+            const userSourceCode=codeEditorElement.value;
+            const canvasWidth=previewCanvasElement.width;
+            const canvasHeight=previewCanvasElement.height;
+            const targetFrameRate=readTargetFrameRate();
+            const frameIntervalMs=1000/targetFrameRate;
+            renderedFrameCount=0;
+            animationStartTimestamp=performance.now();
+            previousFrameTimestamp=animationStartTimestamp;
+            fpsSampleCount=0;
+            fpsSampleTimestamp=animationStartTimestamp;
+            renderContext.fillStyle='#000000';
+            renderContext.fillRect(0,0,canvasWidth,canvasHeight);
+            const renderSandbox={canvas:previewCanvasElement,ctx:renderContext,width:canvasWidth,height:canvasHeight,t:0,dt:0,frame:0};
+            try{
+                const sandboxEvaluator=new Function('_sb','with(_sb){'+userSourceCode+'\nreturn typeof animate==="function"?animate:null;}');
+                const userAnimateFunction=sandboxEvaluator(renderSandbox);
+                if(typeof userAnimateFunction!=='function'){
+                    showNotification('animate() not found','error');
+                    updateStatusText('Error');
+                    return;
+                }
+                let scheduledFrameTimestamp=animationStartTimestamp;
+                isAnimationLoopActive=true;
+                function loop(currentTimestamp){
+                    animationFrameRequest=requestAnimationFrame(loop);
+                    if(currentTimestamp<scheduledFrameTimestamp)return;
+                    scheduledFrameTimestamp+=frameIntervalMs;
+                    if(scheduledFrameTimestamp<currentTimestamp-frameIntervalMs*2)scheduledFrameTimestamp=currentTimestamp;
+                    const elapsedSeconds=(currentTimestamp-animationStartTimestamp)/1000;
+                    const deltaSeconds=(currentTimestamp-previousFrameTimestamp)/1000;
+                    previousFrameTimestamp=currentTimestamp;
+                    renderedFrameCount++;
+                    fpsSampleCount++;
+                    if(currentTimestamp-fpsSampleTimestamp>=1000){
+                        measuredFrameRate=fpsSampleCount;
+                        fpsSampleCount=0;
+                        fpsSampleTimestamp=currentTimestamp;
+                        fpsCounterElement.textContent=measuredFrameRate+' FPS';
+                    }
+                    renderSandbox.t=elapsedSeconds;
+                    renderSandbox.dt=deltaSeconds;
+                    renderSandbox.frame=renderedFrameCount;
+                    userAnimateFunction();
+                    frameInfoLabel.textContent='Frame: '+renderedFrameCount;
+                    timeInfoLabel.textContent='Time: '+elapsedSeconds.toFixed(2)+'s';
+                }
+                animationFrameRequest=requestAnimationFrame(loop);
+                updateStatusText('Running');
+                showNotification('Running','success');
+                runButton.style.display='none';
+            }catch(runtimeError){
+                updateStatusText('Error');
+                showNotification('Error: '+runtimeError.message,'error');
+                console.error(runtimeError);
+            }
+        }
+
+        function startRecordingSession(){
+            revokeLastDownloadUrl();
+            downloadButton.disabled=true;
+            executeUserCode();
+            const targetFrameRate=readTargetFrameRate();
+            const captureStream=previewCanvasElement.captureStream(targetFrameRate);
+            let preferredMimeType='video/webm;codecs=vp9';
+            if(!MediaRecorder.isTypeSupported(preferredMimeType)){
+                preferredMimeType='video/webm;codecs=vp8';
+                if(!MediaRecorder.isTypeSupported(preferredMimeType))preferredMimeType='video/webm';
+            }
+            mediaRecorderInstance=new MediaRecorder(captureStream,{mimeType:preferredMimeType,videoBitsPerSecond:8000000});
+            recordedChunksBuffer=[];
+            mediaRecorderInstance.ondataavailable=event=>{
+                if(event.data.size>0)recordedChunksBuffer.push(event.data);
+            };
+            mediaRecorderInstance.onerror=()=>{
+                updateStatusText('Record error');
+                showNotification('Recording failed','error');
+                stopRecordingSession();
+            };
+            mediaRecorderInstance.onstop=()=>{
+                const encodedBlob=new Blob(recordedChunksBuffer,{type:'video/webm'});
+                const encodedBlobUrl=URL.createObjectURL(encodedBlob);
+                lastDownloadBlobUrl=encodedBlobUrl;
+                downloadButton.onclick=()=>{
+                    const anchorElement=document.createElement('a');
+                    anchorElement.href=encodedBlobUrl;
+                    anchorElement.download='animation_'+Date.now()+'.webm';
+                    document.body.appendChild(anchorElement);
+                    anchorElement.click();
+                    document.body.removeChild(anchorElement);
+                };
+                downloadButton.disabled=false;
+                updateStatusText('Done');
+                showNotification('Recording done!','success');
+            };
+            mediaRecorderInstance.start(100);
+            isRecordingSession=true;
+            recordingStartTimestamp=Date.now();
+            recordButton.innerHTML='&#9632; Stop';
+            recordButton.classList.add('recording');
+            recordingOverlayElement.classList.add('active');
+            downloadButton.disabled=true;
+            updateStatusText('Recording...',true);
+            recordingTimerHandle=setInterval(()=>{
+                const elapsedSeconds=Math.floor((Date.now()-recordingStartTimestamp)/1000);
+                const minuteText=String(Math.floor(elapsedSeconds/60)).padStart(2,'0');
+                const secondText=String(elapsedSeconds%60).padStart(2,'0');
+                recordTimerElement.textContent=minuteText+':'+secondText;
+            },1000);
+        }
+
+        function stopRecordingSession(){
+            if(mediaRecorderInstance&&isRecordingSession){
+                mediaRecorderInstance.stop();
+                isRecordingSession=false;
+                recordButton.innerHTML='&#9679; Record';
+                recordButton.classList.remove('recording');
+                recordingOverlayElement.classList.remove('active');
+                clearInterval(recordingTimerHandle);
+            }
+        }
+
+        runButton.addEventListener('click',function(event){
+            event.stopPropagation();
+            executeUserCode();
+        });
+        clearButton.addEventListener('click',function(event){
+            event.stopPropagation();
+            codeEditorElement.value='';
+            stopAnimationLoop();
+            renderContext.fillStyle='#000000';
+            renderContext.fillRect(0,0,previewCanvasElement.width,previewCanvasElement.height);
+            fpsCounterElement.textContent='-- FPS';
+            frameInfoLabel.textContent='Frame: 0';
+            timeInfoLabel.textContent='Time: 0.00s';
+            updateStatusText('Ready');
+            codeEditorElement.blur();
+            showNotification('Cleared','success');
+            runButton.style.display='';
+        });
+        recordButton.addEventListener('click',function(event){
+            event.stopPropagation();
+            if(isRecordingSession){
+                stopRecordingSession();
+            }else{
+                startRecordingSession();
+            }
+        });
+        downloadButton.addEventListener('click',function(event){
+            event.stopPropagation();
+        });
+        [canvasWidthInput,canvasHeightInput,frameRateSelector].forEach(el=>{
+            el.addEventListener('change',()=>{
+                syncCanvasDimensions();
+                runButton.style.display='';
+            });
+        });
+        window.addEventListener('beforeunload',function(){
+            stopAnimationLoop();
+            stopRecordingSession();
+            revokeLastDownloadUrl();
+        });
+        syncCanvasDimensions();
+    </script>
+</body>
+</html>
