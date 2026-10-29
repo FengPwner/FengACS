@@ -1,175 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animation Code Studio V1</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        html,body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#000;color:#e0e0e0;height:100%;overflow:hidden}
-        body{border:3px solid #1a1a3e}
-        .top-bar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111128;border-bottom:2px solid #e94560;flex-wrap:wrap}
-        .top-bar .group{display:flex;align-items:center;gap:6px;font-size:12px;color:#888}
-        .top-bar input{background:#1a1a3e;border:1px solid #2a2a5e;color:#e0e0e0;padding:4px 8px;font-size:12px;outline:none;max-width:80px}
-        .top-bar input[type="number"]{width:60px}
-        .top-bar input:focus{border-color:#e94560}
-        .btn{padding:6px 14px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap}
-        .btn:hover{filter:brightness(1.2)}
-        .btn:active{transform:translateY(0)}
-        .btn-run{background:#e94560;color:#fff}
-        .btn-record{background:#0f3460;color:#fff}
-        .btn-record.recording{background:#c0392b}
-        .btn-download{background:#533483;color:#fff}
-        .btn-clear{background:#2d3436;color:#fff}
-        .btn-screenshot{background:#00b894;color:#fff}
-        .spacer{flex:1}
-        .version-tag{font-size:11px;color:#555;margin-left:4px}
-        .mode-switch{display:flex;align-items:center;gap:4px;font-size:12px;color:#888}
-        .mode-switch input[type="radio"]{display:none}
-        .mode-switch label{padding:4px 10px;cursor:pointer;background:#1a1a3e;border:1px solid #2a2a5e;font-size:11px;transition:all 0.2s}
-        .mode-switch input[type="radio"]:checked+label{background:#e94560;border-color:#e94560;color:#fff}
-        .container{display:flex;flex-direction:column;height:100vh;width:100vw;padding-top:45px;overflow:hidden}
-        .main-area{display:flex;flex:1;overflow:hidden;min-height:0}
-        .editor-panel{width:33.33%;display:flex;flex-direction:column;border-right:2px solid #16213e;min-width:0}
-        .code-editor{flex:1;min-height:0;background:#000;color:#c8d6e5;border:none;padding:16px;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;font-size:13px;line-height:1.7;resize:none;outline:none;tab-size:2;overflow:auto;-webkit-overflow-scrolling:touch}
-        .code-editor:focus{background:#0a0a15}
-        .code-editor.locked{opacity:0.6}
-        .preview-panel{flex:1;display:flex;flex-direction:column;background:#000;min-width:0}
-        .panel-header{padding:10px 16px;background:#111128;border-bottom:1px solid #1a1a3e;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-        .panel-title{font-size:13px;font-weight:600;color:#e94560;display:flex;align-items:center;gap:8px}
-        .panel-title::before{content:'';display:inline-block;width:8px;height:8px;background:#e94560;border-radius:50%}
-        .preview-area{flex:1;display:flex;justify-content:center;align-items:center;background:#000;position:relative;overflow:hidden}
-        .canvas-wrapper{position:relative;max-width:100%;max-height:100%}
-        canvas{display:block;background:#000;max-width:100%;max-height:100%;object-fit:contain}
-        .image-display{display:none;max-width:100%;max-height:100%;object-fit:contain}
-        .image-display.active{display:block}
-        .canvas-wrapper.hidden{display:none}
-        .status-bar{padding:6px 16px;background:#0a0a15;border-top:1px solid #1a1a3e;font-size:11px;color:#666;display:flex;justify-content:space-between;flex-shrink:0}
-        .status-bar .left,.status-bar .right{display:flex;align-items:center;gap:12px}
-        .status-indicator{display:inline-block;width:8px;height:8px;background:#00b894;border-radius:50%;margin-right:4px}
-        .status-indicator.recording{background:#e74c3c;animation:blink 1s infinite}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-        .toast{position:fixed;top:60px;right:20px;padding:12px 20px;background:#1a1a3e;border-left:4px solid #e94560;font-size:13px;z-index:10000;transform:translateX(120%);transition:transform 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.4)}
-        .toast.show{transform:translateX(0)}
-        .toast.success{border-left-color:#00b894}
-        .toast.error{border-left-color:#e74c3c}
-        .recording-overlay{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.7);padding:6px 12px;font-size:12px;color:#e74c3c;display:none}
-        .recording-overlay.active{display:flex}
-        .recording-dot{width:10px;height:10px;background:#e74c3c;border-radius:50%;animation:blink 1s infinite}
-        .fps-counter{position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.6);padding:4px 10px;font-size:11px;color:#00b894;font-family:monospace}
-        @media(max-width:768px){.main-area{flex-direction:column}.editor-panel{width:100%;height:50%;border-right:none;border-bottom:2px solid #16213e}.top-bar{padding:6px 8px;gap:4px}.btn{padding:5px 10px;font-size:11px}}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animation Code Studio V1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:'Segoe UI',sans-serif;background:#000;color:#e0e0e0;height:100%;overflow:hidden}
+body{border:3px solid #1a1a3e}
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111128;border-bottom:2px solid #e94560;flex-wrap:wrap}
+.top-bar .group{display:flex;align-items:center;gap:6px;font-size:12px;color:#888}
+.top-bar input{background:#1a1a3e;border:1px solid #2a2a5e;color:#e0e0e0;padding:4px 8px;font-size:12px;outline:none;max-width:80px}
+.top-bar input[type="number"]{width:60px}
+.top-bar input:focus{border-color:#e94560}
+.btn{padding:6px 14px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{filter:brightness(1.2)}
+.btn:active{transform:translateY(0)}
+.btn-run{background:#e94560;color:#fff}
+.btn-record{background:#0f3460;color:#fff}
+.btn-record.recording{background:#c0392b}
+.btn-download{background:#533483;color:#fff}
+.btn-clear{background:#2d3436;color:#fff}
+.btn-screenshot{background:#00b894;color:#fff}
+.btn-load{background:#0984e3;color:#fff}
+.spacer{flex:1}
+.version-tag{font-size:11px;color:#555;margin-left:4px}
+.mode-switch{display:flex;align-items:center;gap:4px;font-size:12px;color:#888}
+.mode-switch input[type="radio"]{display:none}
+.mode-switch label{padding:4px 10px;cursor:pointer;background:#1a1a3e;border:1px solid #2a2a5e;font-size:11px;transition:all 0.2s}
+.mode-switch input[type="radio"]:checked+label{background:#e94560;border-color:#e94560;color:#fff}
+.container{display:flex;flex-direction:column;height:100vh;width:100vw;padding-top:45px;overflow:hidden}
+.main-area{display:flex;flex:1;overflow:hidden;min-height:0}
+.editor-panel{width:33.33%;display:flex;flex-direction:column;border-right:2px solid #16213e;min-width:0}
+.code-editor{flex:1;min-height:0;background:#000;color:#c8d6e5;border:none;padding:16px;font-family:'JetBrains Mono','Courier New',monospace;font-size:13px;line-height:1.7;resize:none;outline:none;tab-size:2;overflow:auto}
+.code-editor:focus{background:#0a0a15}
+.code-editor.locked{opacity:0.6}
+.preview-panel{flex:1;display:flex;flex-direction:column;background:#000;min-width:0}
+.panel-header{padding:10px 16px;background:#111128;border-bottom:1px solid #1a1a3e;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.panel-title{font-size:13px;font-weight:600;color:#e94560;display:flex;align-items:center;gap:8px}
+.panel-title::before{content:'';display:inline-block;width:8px;height:8px;background:#e94560;border-radius:50%}
+.preview-area{flex:1;display:flex;justify-content:center;align-items:center;background:#000;position:relative;overflow:hidden}
+.canvas-wrapper{position:relative;max-width:100%;max-height:100%}
+canvas{display:block;background:#000;max-width:100%;max-height:100%;object-fit:contain}
+.image-display{display:none;max-width:100%;max-height:100%;object-fit:contain}
+.image-display.active{display:block}
+.canvas-wrapper.hidden{display:none}
+.status-bar{padding:6px 16px;background:#0a0a15;border-top:1px solid #1a1a3e;font-size:11px;color:#666;display:flex;justify-content:space-between;flex-shrink:0}
+.status-bar .left,.status-bar .right{display:flex;align-items:center;gap:12px}
+.status-indicator{display:inline-block;width:8px;height:8px;background:#00b894;border-radius:50%;margin-right:4px}
+.status-indicator.recording{background:#e74c3c;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.toast{position:fixed;top:60px;right:20px;padding:12px 20px;background:#1a1a3e;border-left:4px solid #e94560;font-size:13px;z-index:10000;transform:translateX(120%);transition:transform 0.3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.4)}
+.toast.show{transform:translateX(0)}
+.toast.success{border-left-color:#00b894}
+.toast.error{border-left-color:#e74c3c}
+.recording-overlay{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.7);padding:6px 12px;font-size:12px;color:#e74c3c;display:none}
+.recording-overlay.active{display:flex}
+.recording-dot{width:10px;height:10px;background:#e74c3c;border-radius:50%;animation:blink 1s infinite}
+.fps-counter{position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.6);padding:4px 10px;font-size:11px;color:#00b894;font-family:monospace}
+@media(max-width:768px){.main-area{flex-direction:column}.editor-panel{width:100%;height:50%;border-right:none;border-bottom:2px solid #16213e}.top-bar{padding:6px 8px;gap:4px}.btn{padding:5px 10px;font-size:11px}}
+</style>
 </head>
 <body>
-    <div class="top-bar">
-        <div class="mode-switch">
-            <input type="radio" name="runMode" id="modeAnimation" value="animation" checked>
-            <label for="modeAnimation">Animation</label>
-            <input type="radio" name="runMode" id="modeImage" value="image">
-            <label for="modeImage">Image</label>
-        </div>
-        <div class="spacer"></div>
-        <div class="group"><label>W</label><input type="number" id="canvasWidth" value="3840" min="100" max="3840"></div>
-        <div class="group"><label>H</label><input type="number" id="canvasHeight" value="2160" min="100" max="2160"></div>
-        <span class="version-tag">V1</span>
-        <button class="btn btn-run" id="runBtn">Run</button>
-        <button class="btn btn-clear" id="clearBtn">Clear</button>
-        <button class="btn btn-screenshot" id="screenshotBtn">Screenshot</button>
-        <button class="btn btn-record" id="recordBtn">Record</button>
-        <button class="btn btn-download" id="downloadBtn" disabled>Download</button>
-    </div>
-    <div class="container">
-        <div class="main-area">
-            <div class="editor-panel">
-                <div class="panel-header"><div class="panel-title">Editor</div><div style="font-size:11px;color:#555" id="editorStatus">Click to edit</div></div>
-                <textarea class="code-editor locked" id="codeEditor" spellcheck="false" placeholder="function animate() {
+<div class="top-bar">
+<div class="mode-switch">
+<input type="radio" name="runMode" id="modeAnimation" value="animation" checked>
+<label for="modeAnimation">Animation</label>
+<input type="radio" name="runMode" id="modeImage" value="image">
+<label for="modeImage">Image</label>
+</div>
+<div class="spacer"></div>
+<div class="group"><label>W</label><input type="number" id="canvasWidth" value="3840" min="100" max="3840"></div>
+<div class="group"><label>H</label><input type="number" id="canvasHeight" value="2160" min="100" max="2160"></div>
+<span class="version-tag">V1</span>
+<button class="btn btn-load" id="loadBtn">Load JS</button>
+<button class="btn btn-run" id="runBtn">Run</button>
+<button class="btn btn-clear" id="clearBtn">Clear</button>
+<button class="btn btn-screenshot" id="screenshotBtn">Screenshot</button>
+<button class="btn btn-record" id="recordBtn">Record</button>
+<button class="btn btn-download" id="downloadBtn" disabled>Download</button>
+</div>
+<div class="container">
+<div class="main-area">
+<div class="editor-panel">
+<div class="panel-header"><div class="panel-title">Editor</div><div style="font-size:11px;color:#555" id="editorStatus">Click to edit</div></div>
+<textarea class="code-editor locked" id="codeEditor" spellcheck="false" placeholder="function animate() {
   // Available: canvas, ctx, width, height, t, dt, frame
 }"></textarea>
-            </div>
-            <div class="preview-panel">
-                <div class="panel-header"><div class="panel-title">Preview</div><div style="font-size:11px;color:#555" id="sizeLabel">3840 x 2160</div></div>
-                <div class="preview-area" id="previewArea">
-                    <div class="canvas-wrapper" id="canvasWrapper"><canvas id="previewCanvas"></canvas></div>
-                    <img class="image-display" id="imageDisplay" alt="Rendered output">
-                    <div class="fps-counter" id="fpsCounter">-- FPS</div>
-                    <div class="recording-overlay" id="recordingOverlay"><div class="recording-dot"></div><span id="recordTimer">00:00</span></div>
-                </div>
-                <div class="status-bar">
-                    <div class="left"><span class="status-indicator" id="statusDot"></span><span id="statusText">Ready</span></div>
-                    <div class="right"><span id="frameInfo">Frame: 0</span><span id="timeInfo">Time: 0.00s</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="toast" id="toast"></div>
-    <script>
-        const previewCanvasElement=document.getElementById('previewCanvas');
-        const canvasWrapper=document.getElementById('canvasWrapper');
-        const imageDisplayElement=document.getElementById('imageDisplay');
-        const renderContext=previewCanvasElement.getContext('2d');
-        const codeEditorElement=document.getElementById('codeEditor');
-        const runButton=document.getElementById('runBtn');
-        const clearButton=document.getElementById('clearBtn');
-        const screenshotButton=document.getElementById('screenshotBtn');
-        const recordButton=document.getElementById('recordBtn');
-        const downloadButton=document.getElementById('downloadBtn');
-        const canvasWidthInput=document.getElementById('canvasWidth');
-        const canvasHeightInput=document.getElementById('canvasHeight');
-        const sizeLabelElement=document.getElementById('sizeLabel');
-        const fpsCounterElement=document.getElementById('fpsCounter');
-        const recordingOverlayElement=document.getElementById('recordingOverlay');
-        const recordTimerElement=document.getElementById('recordTimer');
-        const statusIndicatorElement=document.getElementById('statusDot');
-        const statusLabelElement=document.getElementById('statusText');
-        const frameInfoLabel=document.getElementById('frameInfo');
-        const timeInfoLabel=document.getElementById('timeInfo');
-        const toastElement=document.getElementById('toast');
-        const editorStatusLabel=document.getElementById('editorStatus');
-        const modeAnimationRadio=document.getElementById('modeAnimation');
-        const modeImageRadio=document.getElementById('modeImage');
-        let animationFrameRequest=null;
-        let mediaRecorderInstance=null;
-        let recordedChunksBuffer=[];
-        let isRecordingSession=false;
-        let renderedFrameCount=0;
-        let animationStartTimestamp=0;
-        let previousFrameTimestamp=0;
-        let fpsSampleCount=0;
-        let fpsSampleTimestamp=0;
-        let measuredFrameRate=0;
-        let recordingStartTimestamp=0;
-        let recordingTimerHandle=null;
-        let isAnimationLoopActive=false;
-        let lastDownloadBlobUrl=null;
-        let currentRunMode='animation';
-        const TARGET_FRAME_RATE=144;
-        const FRAME_INTERVAL_MS=1000/TARGET_FRAME_RATE;
-        function showNotification(message,variant=''){toastElement.textContent=message;toastElement.className='toast show '+variant;setTimeout(()=>toastElement.className='toast',2500)}
-        function updateStatusText(text,recording=false){statusLabelElement.textContent=text;statusIndicatorElement.className='status-indicator'+(recording?' recording':'')}
-        function syncCanvasDimensions(){const targetWidth=parseInt(canvasWidthInput.value)||3840;const targetHeight=parseInt(canvasHeightInput.value)||2160;previewCanvasElement.width=targetWidth;previewCanvasElement.height=targetHeight;sizeLabelElement.textContent=targetWidth+' x '+targetHeight;if(!isAnimationLoopActive){renderContext.fillStyle='#000000';renderContext.fillRect(0,0,targetWidth,targetHeight)}}
-        function stopAnimationLoop(){if(animationFrameRequest){cancelAnimationFrame(animationFrameRequest);animationFrameRequest=null}isAnimationLoopActive=false}
-        function revokeLastDownloadUrl(){if(lastDownloadBlobUrl){URL.revokeObjectURL(lastDownloadBlobUrl);lastDownloadBlobUrl=null}}
-        function setRunMode(mode){currentRunMode=mode;if(mode==='image'){canvasWrapper.classList.add('hidden');imageDisplayElement.classList.add('active');fpsCounterElement.style.display='none'}else{canvasWrapper.classList.remove('hidden');imageDisplayElement.classList.remove('active');fpsCounterElement.style.display='block'}}
-        modeAnimationRadio.addEventListener('change',()=>setRunMode('animation'));
-        modeImageRadio.addEventListener('change',()=>setRunMode('image'));
-        codeEditorElement.addEventListener('focus',function(){codeEditorElement.classList.remove('locked');editorStatusLabel.textContent='Editing...'});
-        codeEditorElement.addEventListener('blur',function(){codeEditorElement.classList.add('locked');editorStatusLabel.textContent='Click to edit'});
-        codeEditorElement.addEventListener('keydown',function(event){if(event.key==='Tab'){event.preventDefault();const s=codeEditorElement.selectionStart;const e=codeEditorElement.selectionEnd;codeEditorElement.value=codeEditorElement.value.substring(0,s)+'  '+codeEditorElement.value.substring(e);codeEditorElement.selectionStart=codeEditorElement.selectionEnd=s+2}if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();executeUserCode()}});
-        function executeUserCode(){stopAnimationLoop();const src=codeEditorElement.value;const w=previewCanvasElement.width;const h=previewCanvasElement.height;renderedFrameCount=0;animationStartTimestamp=performance.now();previousFrameTimestamp=animationStartTimestamp;fpsSampleCount=0;fpsSampleTimestamp=animationStartTimestamp;renderContext.fillStyle='#000000';renderContext.fillRect(0,0,w,h);if(currentRunMode==='image'){renderSingleFrame(src,w,h)}else{startAnimationLoop(src,w,h)}}
-        function renderSingleFrame(src,w,h){const sb={canvas:previewCanvasElement,ctx:renderContext,width:w,height:h,t:0,dt:0,frame:0};try{const fn=new Function('_sb','with(_sb){'+src+'\nreturn typeof animate==="function"?animate:null;}');const animate=fn(sb);if(typeof animate!=='function'){showNotification('animate() not found','error');updateStatusText('Error');return}animate();imageDisplayElement.src=previewCanvasElement.toDataURL('image/png');updateStatusText('Image rendered');showNotification('Image rendered','success')}catch(e){updateStatusText('Error');showNotification('Error: '+e.message,'error');console.error(e)}}
-        function startAnimationLoop(src,w,h){const sb={canvas:previewCanvasElement,ctx:renderContext,width:w,height:h,t:0,dt:0,frame:0};try{const fn=new Function('_sb','with(_sb){'+src+'\nreturn typeof animate==="function"?animate:null;}');const animate=fn(sb);if(typeof animate!=='function'){showNotification('animate() not found','error');updateStatusText('Error');return}let scheduled=animationStartTimestamp;isAnimationLoopActive=true;function loop(ts){animationFrameRequest=requestAnimationFrame(loop);if(ts<scheduled)return;scheduled+=FRAME_INTERVAL_MS;if(scheduled<ts-FRAME_INTERVAL_MS*2)scheduled=ts;const elapsed=(ts-animationStartTimestamp)/1000;const delta=(ts-previousFrameTimestamp)/1000;previousFrameTimestamp=ts;renderedFrameCount++;fpsSampleCount++;if(ts-fpsSampleTimestamp>=1000){measuredFrameRate=fpsSampleCount;fpsSampleCount=0;fpsSampleTimestamp=ts;fpsCounterElement.textContent=measuredFrameRate+' FPS'}sb.t=elapsed;sb.dt=delta;sb.frame=renderedFrameCount;animate();frameInfoLabel.textContent='Frame: '+renderedFrameCount;timeInfoLabel.textContent='Time: '+elapsed.toFixed(2)+'s'}animationFrameRequest=requestAnimationFrame(loop);updateStatusText('Running');showNotification('Running','success')}catch(e){updateStatusText('Error');showNotification('Error: '+e.message,'error');console.error(e)}}
-        function takeScreenshot(){try{let url;if(currentRunMode==='image'&&imageDisplayElement.src){url=imageDisplayElement.src}else{url=previewCanvasElement.toDataURL('image/png')}const a=document.createElement('a');a.href=url;a.download='screenshot_'+Date.now()+'.png';document.body.appendChild(a);a.click();document.body.removeChild(a);showNotification('Screenshot saved','success')}catch(e){showNotification('Screenshot failed','error');console.error(e)}}
-        function startRecordingSession(){revokeLastDownloadUrl();downloadButton.disabled=true;executeUserCode();const stream=previewCanvasElement.captureStream(TARGET_FRAME_RATE);let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime)){mime='video/webm;codecs=vp8';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm'}mediaRecorderInstance=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8000000});recordedChunksBuffer=[];mediaRecorderInstance.ondataavailable=e=>{if(e.data&&e.data.size>0)recordedChunksBuffer.push(e.data)};mediaRecorderInstance.onstop=()=>{const blob=new Blob(recordedChunksBuffer,{type:mime});lastDownloadBlobUrl=URL.createObjectURL(blob);downloadButton.disabled=false;isRecordingSession=false;recordButton.classList.remove('recording');recordButton.textContent='Record';recordingOverlayElement.classList.remove('active');clearInterval(recordingTimerHandle);updateStatusText('Recording finished');showNotification('Recording saved','success')};mediaRecorderInstance.start(100);isRecordingSession=true;recordButton.classList.add('recording');recordButton.textContent='Stop';recordingOverlayElement.classList.add('active');recordingStartTimestamp=Date.now();recordingTimerHandle=setInterval(()=>{const elapsed=Math.floor((Date.now()-recordingStartTimestamp)/1000);const mm=String(Math.floor(elapsed/60)).padStart(2,'0');const ss=String(elapsed%60).padStart(2,'0');recordTimerElement.textContent=mm+':'+ss},1000);updateStatusText('Recording...',true)}
-        function stopRecordingSession(){if(mediaRecorderInstance&&mediaRecorderInstance.state!=='inactive')mediaRecorderInstance.stop()}
-        runButton.addEventListener('click',function(event){event.stopPropagation();executeUserCode()});
-        clearButton.addEventListener('click',function(event){event.stopPropagation();stopAnimationLoop();renderContext.fillStyle='#000000';renderContext.fillRect(0,0,previewCanvasElement.width,previewCanvasElement.height);renderedFrameCount=0;animationStartTimestamp=0;previousFrameTimestamp=0;fpsSampleCount=0;fpsSampleTimestamp=0;measuredFrameRate=0;frameInfoLabel.textContent='Frame: 0';timeInfoLabel.textContent='Time: 0.00s';updateStatusText('Ready');showNotification('Cleared')});
-        screenshotButton.addEventListener('click',function(event){event.stopPropagation();takeScreenshot()});
-        recordButton.addEventListener('click',function(event){event.stopPropagation();if(isRecordingSession){stopRecordingSession()}else{startRecordingSession()}});
-        downloadButton.addEventListener('click',function(event){event.stopPropagation();if(lastDownloadBlobUrl){const a=document.createElement('a');a.href=lastDownloadBlobUrl;a.download='recording_'+Date.now()+'.webm';document.body.appendChild(a);a.click();document.body.removeChild(a)}});
-        canvasWidthInput.addEventListener('change',syncCanvasDimensions);
-        canvasHeightInput.addEventListener('change',syncCanvasDimensions);
-        syncCanvasDimensions();
-        updateStatusText('Ready');
-    </script>
+</div>
+<div class="preview-panel">
+<div class="panel-header"><div class="panel-title">Preview</div><div style="font-size:11px;color:#555" id="sizeLabel">3840 x 2160</div></div>
+<div class="preview-area" id="previewArea">
+<div class="canvas-wrapper" id="canvasWrapper"><canvas id="previewCanvas"></canvas></div>
+<img class="image-display" id="imageDisplay" alt="Rendered output">
+<div class="fps-counter" id="fpsCounter">-- FPS</div>
+<div class="recording-overlay" id="recordingOverlay"><div class="recording-dot"></div><span id="recordTimer">00:00</span></div>
+</div>
+<div class="status-bar">
+<div class="left"><span class="status-indicator" id="statusDot"></span><span id="statusText">Ready</span></div>
+<div class="right"><span id="frameInfo">Frame: 0</span><span id="timeInfo">Time: 0.00s</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".js" style="display:none">
+<script>
+const C=document.getElementById('previewCanvas'),W=document.getElementById('canvasWrapper'),I=document.getElementById('imageDisplay'),X=C.getContext('2d'),E=document.getElementById('codeEditor'),R=document.getElementById('runBtn'),L=document.getElementById('clearBtn'),S=document.getElementById('screenshotBtn'),P=document.getElementById('recordBtn'),D=document.getElementById('downloadBtn'),F=document.getElementById('loadBtn'),G=document.getElementById('fileInput'),w=document.getElementById('canvasWidth'),h=document.getElementById('canvasHeight'),z=document.getElementById('sizeLabel'),f=document.getElementById('fpsCounter'),O=document.getElementById('recordingOverlay'),T=document.getElementById('recordTimer'),d=document.getElementById('statusDot'),s=document.getElementById('statusText'),m=document.getElementById('frameInfo'),t=document.getElementById('timeInfo'),n=document.getElementById('toast'),u=document.getElementById('editorStatus'),A=document.getElementById('modeAnimation'),B=document.getElementById('modeImage');
+let a=null,M=null,b=[],y=false,k=0,Q=0,p=0,v=0,V=0,q=0,H=false,U=null,c='animation';
+const N=144,J=1000/N;
+function $(e,v=''){n.textContent=e;n.className='toast show '+v;setTimeout(()=>n.className='toast',2500)}
+function _(e,r=false){s.textContent=e;d.className='status-indicator'+(r?' recording':'')}
+function K(){C.width=parseInt(w.value)||3840;C.height=parseInt(h.value)||2160;z.textContent=C.width+' x '+C.height;if(!H){X.fillStyle='#000';X.fillRect(0,0,C.width,C.height)}}
+function Y(){if(a){cancelAnimationFrame(a);a=null}H=false}
+function Z(){if(U){URL.revokeObjectURL(U);U=null}}
+function ee(e){c=e;if(e==='image'){W.classList.add('hidden');I.classList.add('active');f.style.display='none'}else{W.classList.remove('hidden');I.classList.remove('active');f.style.display='block'}}
+A.addEventListener('change',()=>ee('animation'));
+B.addEventListener('change',()=>ee('image'));
+E.addEventListener('focus',function(){E.classList.remove('locked');u.textContent='Editing...'});
+E.addEventListener('blur',function(){E.classList.add('locked');u.textContent='Click to edit'});
+E.addEventListener('keydown',function(e){if(e.key==='Tab'){e.preventDefault();const s=E.selectionStart,en=E.selectionEnd;E.value=E.value.substring(0,s)+'  '+E.value.substring(en);E.selectionStart=E.selectionEnd=s+2}if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();tt()}});
+F.addEventListener('click',function(e){e.stopPropagation();G.click()});
+G.addEventListener('change',function(e){const fl=e.target.files[0];if(!fl)return;if(!fl.name.endsWith('.js')){$('Please select a .js file','error');return}const r=new FileReader();r.onload=function(e){const code=e.target.result;const match=code.match(/function\s+animate\s*\([^)]*\)\s*\{[\s\S]*\}(?:\s*;)?/);if(match){E.value=match[0];$('File loaded: '+fl.name,'success')}else{$('No animate() function found','error')}};r.readAsText(fl);G.value=''})
+function tt(){Y();const src=E.value,W=C.width,H=C.height;k=0;Q=performance.now();p=Q;v=0;V=Q;X.fillStyle='#000';X.fillRect(0,0,W,H);if(c==='image'){rr(src,W,H)}else{ii(src,W,H)}}
+function rr(src,W,H){const sb={canvas:C,ctx:X,width:W,height:H,t:0,dt:0,frame:0};try{const fn=new Function('_sb','with(_sb){'+src+'\nreturn typeof animate==="function"?animate:null;}');const animate=fn(sb);if(typeof animate!=='function'){$('animate() not found','error');_('Error');return}animate();I.src=C.toDataURL('image/png');_('Image rendered');$('Image rendered','success')}catch(e){_('Error');$('Error: '+e.message,'error');console.error(e)}}
+function ii(src,W,H){const sb={canvas:C,ctx:X,width:W,height:H,t:0,dt:0,frame:0};try{const fn=new Function('_sb','with(_sb){'+src+'\nreturn typeof animate==="function"?animate:null;}');const animate=fn(sb);if(typeof animate!=='function'){$('animate() not found','error');_('Error');return}let scheduled=Q;H=true;function loop(ts){a=requestAnimationFrame(loop);if(ts<scheduled)return;scheduled+=J;if(scheduled<ts-J*2)scheduled=ts;const elapsed=(ts-Q)/1000;const delta=(ts-p)/1000;p=ts;k++;v++;if(ts-V>=1000){q=v;v=0;V=ts;f.textContent=q+' FPS'}sb.t=elapsed;sb.dt=delta;sb.frame=k;animate();m.textContent='Frame: '+k;t.textContent='Time: '+elapsed.toFixed(2)+'s'}a=requestAnimationFrame(loop);_('Running');$('Running','success')}catch(e){_('Error');$('Error: '+e.message,'error');console.error(e)}}
+function ss(){try{let url;if(c==='image'&&I.src){url=I.src}else{url=C.toDataURL('image/png')}const a=document.createElement('a');a.href=url;a.download='screenshot_'+Date.now()+'.png';document.body.appendChild(a);a.click();document.body.removeChild(a);$('Screenshot saved','success')}catch(e){$('Screenshot failed','error');console.error(e)}}
+function oo(){Z();D.disabled=true;tt();const stream=C.captureStream(N);let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime)){mime='video/webm;codecs=vp8';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm'}M=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8000000});b=[];M.ondataavailable=e=>{if(e.data&&e.data.size>0)b.push(e.data)};M.onstop=()=>{const blob=new Blob(b,{type:mime});U=URL.createObjectURL(blob);D.disabled=false;y=false;P.classList.remove('recording');P.textContent='Record';O.classList.remove('active');clearInterval(H);_('Recording finished');$('Recording saved','success')};M.start(100);y=true;P.classList.add('recording');P.textContent='Stop';O.classList.add('active');Q=Date.now();H=setInterval(()=>{const elapsed=Math.floor((Date.now()-Q)/1000);const mm=String(Math.floor(elapsed/60)).padStart(2,'0');const ss=String(elapsed%60).padStart(2,'0');T.textContent=mm+':'+ss},1000);_('Recording...',true)}
+function pp(){if(M&&M.state!=='inactive')M.stop()}
+R.addEventListener('click',function(e){e.stopPropagation();tt()});
+L.addEventListener('click',function(e){e.stopPropagation();Y();X.fillStyle='#000';X.fillRect(0,0,C.width,C.height);k=0;Q=0;p=0;v=0;V=0;q=0;m.textContent='Frame: 0';t.textContent='Time: 0.00s';_('Ready');$('Cleared')});
+S.addEventListener('click',function(e){e.stopPropagation();ss()});
+P.addEventListener('click',function(e){e.stopPropagation();if(y){pp()}else{oo()}});
+D.addEventListener('click',function(e){e.stopPropagation();if(U){const a=document.createElement('a');a.href=U;a.download='recording_'+Date.now()+'.webm';document.body.appendChild(a);a.click();document.body.removeChild(a)}});
+w.addEventListener('change',K);
+K();
+</script>
 </body>
 </html>
