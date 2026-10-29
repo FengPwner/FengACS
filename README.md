@@ -1,4 +1,4 @@
-# FengACS — Animation Code Studio
+# Feng-Animation Code Studio(FengACS)
 
 **FengACS** (Feng **A**nimation **C**ode **S**tudio) is a single-file, zero-dependency browser IDE for
 writing and recording HTML5 Canvas animations. Type an `animate()` function in the editor on the left,
