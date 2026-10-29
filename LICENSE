@@ -1,35 +1,33 @@
-# Feng-Animation Code Studio(FengACS) License
+Feng-Animation Code Studio(FengACS) License
 
-Copyright (c) 2024 FengPwner
+Copyright (c) 2026 FengPwner
 
 https://github.com/FengPwner
 
----
-
-## 1. Permission
+1. Permission
 
 You are hereby granted permission to use, copy, modify, and distribute this software and its associated documentation (the "Software"), subject to the conditions set forth below.
 
-## 2. Conditions
+2. Conditions
 
-### 2.1 Attribution
+2.1 Attribution
 
-Any use, copy, modification, or distribution of the Software, in whole or in part, must clearly credit the original author **FengPwner** and include a link to the original repository:
+Any use, copy, modification, or distribution of the Software, in whole or in part, must clearly credit the original author FengPwner and include a link to the original repository:
 
-> https://github.com/FengPwner
+https://github.com/FengPwner
 
 This attribution must appear in a reasonable and visible location, such as in the source code, documentation, an "About" section, or any accompanying materials.
 
-### 2.2 Non-Commercial Use Only
+2.2 Non-Commercial Use Only
 
-The Software may **not** be used for any commercial purpose. Commercial purposes include, but are not limited to:
+The Software may not be used for any commercial purpose. Commercial purposes include, but are not limited to:
 
 - Selling the Software or any derivative work
 - Using the Software as part of a paid product or service
 - Using the Software to generate revenue, directly or indirectly
 - Incorporating the Software into any commercial offering
 
-### 2.3 Share-Alike
+2.3 Share-Alike
 
 If you modify the Software and distribute the modified version, you must:
 
@@ -37,14 +35,14 @@ If you modify the Software and distribute the modified version, you must:
 - Clearly indicate that changes were made
 - Preserve the original author credit and repository link
 
-## 3. Disclaimer
+3. Disclaimer
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## 4. Termination
+4. Termination
 
 Any violation of the terms of this License automatically terminates your rights under it. Upon termination, you must cease all use and distribution of the Software and destroy any copies in your possession.
 
-## 5. Acceptance
+5. Acceptance
 
 By using, copying, modifying, or distributing the Software, you acknowledge that you have read, understood, and agree to be bound by the terms of this License.
