@@ -644,7 +644,7 @@ FengACS.registerExtension({
     settings: 'Asetukset', extensions: 'Laajennukset', about: 'Tietoja',
     aboutTitle: 'Tietoja', version: 'Versio', developer: 'Kehittäjä', link: 'Linkki', close: 'Sulje',
     editor: 'Editori', preview: 'Esikatselu', clickToEdit: 'Klikkaa muokataksesi', editing: 'Muokataan...',
-            tip: 'Välilyönti: Keskeytä | Ctrl+Enter: Suorita | Ctrl+S: Tallenna | F: Koko näyttö',
+    tip: 'Välilyönti: Keskeytä | Ctrl+Enter: Suorita | Ctrl+S: Tallenna | F: Koko näyttö',
         ready: 'Valmis', running: 'Käynnissä', paused: 'Keskeytetty',
         recording: 'Tallennetaan...', recordingFinished: 'Tallennus valmis',
         frame: 'Kuva: ', time: 'Aika: ',
