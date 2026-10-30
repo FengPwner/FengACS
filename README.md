@@ -1,89 +1,110 @@
-<div align="center">
+<!--
+  ┌──────────────────────────────────────────────────────────────┐
+  │  FengACS  ·  Feng Animation Code Studio                       │
+  │  Write. Render. Record. Export. — zero build, zero server.   │
+  └──────────────────────────────────────────────────────────────┘
+-->
+<h1 align="center"><code>FengACS</code> — Feng Animation Code Studio</h1>
+<p align="center"><b>A single-file, zero-dependency browser IDE for HTML5 Canvas animations.</b></p>
 
-# 🎨 FengACS — Feng Animation Code Studio
+<p align="center">
+  <a href="#"><img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-0-000000?style=flat-square"/></a>
+  <a href="#"><img alt="Single file" src="https://img.shields.io/badge/single%20file-YES-1f6feb?style=flat-square"/></a>
+  <a href="#"><img alt="Build step" src="https://img.shields.io/badge/build%20step-none-3fb950?style=flat-square"/></a>
+  <a href="#"><img alt="Server" src="https://img.shields.io/badge/server-required%20%3F%20no-3fb950?style=flat-square"/></a>
+  <a href="#"><img alt="Canvas" src="https://img.shields.io/badge/HTML5-Canvas%202D-f0883e?style=flat-square"/></a>
+  <a href="#"><img alt="Export" src="https://img.shields.io/badge/export-WebM%20%7C%20VP9-8957e5?style=flat-square"/></a>
+</p>
 
-### *A single-file, zero-dependency browser IDE for HTML5 Canvas animations*
-
-> *"Write an `animate()`, watch it live, export a WebM. That's it."*
-
-[![Made with Canvas 2D](https://img.shields.io/badge/Canvas%202D-API-blue?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D)
-[![Zero Dependency](https://img.shields.io/badge/Zero-Dependency-success?style=for-the-badge&logo=package)](https://github.com/FengPwner/FengACS)
-[![Single File](https://img.shields.io/badge/Single-File%20App-purple?style=for-the-badge&logo=github)](https://github.com/FengPwner/FengACS)
-[![No Build](https://img.shields.io/badge/No-Build%20Step-orange?style=for-the-badge&logo=npm)](https://github.com/FengPwner/FengACS)
-[![FPS 24–144](https://img.shields.io/badge/FPS-24%E2%80%93144-critical?style=for-the-badge&logo=playstation)](https://github.com/FengPwner/FengACS)
-
-</div>
-
-<details open>
-<summary><strong>📑 Table of Contents</strong></summary>
-
-- [✨ Highlights](#-highlights)
-- [🚀 Quick Start](#-quick-start)
-- [🧠 The Sketch API](#-the-sketch-api)
-- [📜 Sketch Authoring Rules](#-sketch-authoring-rules)
-- [⚙️ Frame Loop & FPS Target](#️-frame-loop--fps-target)
-- [🎛️ Settings](#️-settings)
-- [📼 Recording & Export](#-recording--export)
-- [🖥️ Interface Reference](#️-interface-reference)
-- [📊 Included Example — PERFTEST.js](#-included-example--perftestjs)
-- [🌐 Browser Support](#-browser-support)
-- [⚠️ Known Limitations](#️-known-limitations)
-- [📁 Project Structure](#-project-structure)
-- [💡 Ideas for Extension](#-ideas-for-extension)
-- [👤 Author](#-author)
-- [📄 License](#-license)
-
-</details>
+> **FengACS** (Feng Animation Code Studio) is an entire animation IDE squeezed into **one HTML file**.
+> You write a single `animate()` function, watch it render live beside the editor, lock the cadence to
+> **24–144 FPS**, and export the result as a **WebM** video — with no build step, no server, no install,
+> and *no network at runtime*.
+>
+> > *"Write an `animate()`, watch it live, export a WebM. That's it."*
 
 ---
 
-<a id="-highlights"></a>
+## 🔗 Table of Contents
+
+- [Highlights](#-highlights)
+- [Quick Start](#-quick-start)
+- [The Sketch API](#-the-sketch-api)
+  - [Available Names inside `animate()`](#available-names-inside-animate)
+  - [Keeping State across Frames](#keeping-state-across-frames)
+- [Sketch Authoring Rules](#-sketch-authoring-rules)
+  - [Runtime Contract](#runtime-contract)
+  - [Do not touch the DOM](#do-not-touch-the-dom)
+- [Frame Loop & FPS Governor](#-frame-loop--fps-governor)
+- [Settings](#-settings)
+- [Recording & Export Pipeline](#-recording--export-pipeline)
+- [Interface Reference](#-interface-reference)
+- [Included Example — PERFTEST.js](#-included-example--perftestjs)
+- [Architecture](#-architecture)
+- [Browser Support](#-browser-support)
+- [Known Limitations](#-known-limitations)
+- [Roadmap](#-roadmap)
+- [Project Structure](#-project-structure)
+- [Contributing](#-contributing)
+- [Author](#-author)
+- [License](#-license)
+
+---
+
 ## ✨ Highlights
 
-> **Truly self-contained.** One `FengACS.html` file. No frameworks, no CDN calls, no external assets, no network required at runtime.
-
-- ✅ **Live split-pane preview** — editor on the left, canvas on the right, both visible at once.
-- 🎯 **Frame-rate governor** — target **24 / 30 / 60 / 120 / 144 FPS** with drift correction.
-- 📼 **In-page video export** — `canvas.captureStream()` + `MediaRecorder` → **WebM** at 8 Mbps.
-- 📊 **Real-time telemetry** — measured FPS, frame counter, elapsed time, run/record status.
-- 🖥️ **Resolution up to 4K** — width `100–3840`, height `100–2160`.
-- 🧩 **A tiny, familiar sketch API** — `canvas`, `ctx`, `width`, `height`, `t`, `dt`, `frame` for free.
+| Capability | What you get |
+| :--- | :--- |
+| **Truly self-contained** | One `FengACS.html`. No frameworks, no CDN, no external assets, no network. |
+| **Live split-pane preview** | Editor left, canvas right — both visible at once, updated live. |
+| **Frame-rate governor** | Fixed-interval gate at `24 / 30 / 60 / 120 / 144 FPS` with drift correction. |
+| **In-page video export** | `canvas.captureStream()` + `MediaRecorder` → `WebM` @ 8 Mbps. |
+| **Real-time telemetry** | Measured FPS, frame counter, elapsed time, run / record status. |
+| **Resolution up to 4K** | `W` ∈ `[100, 3840]`, `H` ∈ `[100, 2160]`. |
+| **Tiny familiar sketch API** | `canvas`, `ctx`, `width`, `height`, `t`, `dt`, `frame` — free. |
 
 ---
 
-<a id="-quick-start"></a>
 ## 🚀 Quick Start
 
 1. **Download or clone** this repository.
-2. **Open** `FengACS.html` in any browser — `file://` works fine, no server needed.
+
+   ```bash
+   git clone https://github.com/FengPwner/FengACS.git
+   cd FengACS
+   ```
+
+2. **Open** `FengACS.html` in any modern browser — `file://` works fine, no server needed.
+
 3. **Paste** a sketch into the editor:
 
-```js
-function animate() {
-  ctx.fillStyle = "#050510";
-  ctx.fillRect(0, 0, width, height);
+   ```js
+   function animate() {
+     ctx.fillStyle = "#050510";
+     ctx.fillRect(0, 0, width, height);
 
-  ctx.save();
-  ctx.translate(width / 2, height / 2);
-  ctx.rotate(t * 1.5);
-  ctx.fillStyle = "hsl(" + ((t * 60) % 360) + ", 90%, 60%)";
-  ctx.fillRect(-90, -90, 180, 180);
-  ctx.restore();
-}
-```
+     ctx.save();
+     ctx.translate(width / 2, height / 2);
+     ctx.rotate(t * 1.5);
+     ctx.fillStyle = "hsl(" + ((t * 60) % 360) + ", 90%, 60%)";
+     ctx.fillRect(-90, -90, 180, 180);
+     ctx.restore();
+   }
+   ```
 
-4. Press **Run** (or `Ctrl` / `Cmd` + `Enter`), then **Record** → **Stop** → **Download**.
+4. Press **Run** (or <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>), then **Record** → **Stop** → **Download**.
 
-> 💡 Want something meatier? Load `example/PERFTEST.js` and paste it into the editor.
+> 💡 Want something meatier? Load `example/PERFTEST.js` and paste it into the editor — it doubles as
+> a stress test *and* an API showcase.
 
 ---
 
-<a id="-the-sketch-api"></a>
 ## 🧠 The Sketch API
 
-Your editor contents are evaluated **once per Run**. FengACS then looks for `animate()` and calls it once per rendered frame.
+Your editor contents are evaluated **once per Run**. FengACS then looks for `animate()` and calls it
+once per rendered frame.
 
-### Available names inside `animate()`
+### Available Names inside `animate()`
 
 | Name | Type | Meaning |
 | :--- | :--- | :--- |
@@ -95,7 +116,7 @@ Your editor contents are evaluated **once per Run**. FengACS then looks for `ani
 | `dt` | `number` | Seconds since the previously rendered frame. |
 | `frame` | `number` | Rendered frame count since Run started (starts at `1`). |
 
-### Keep state across frames
+### Keeping State across Frames
 
 Because the body runs once, top-level variables persist between frames:
 
@@ -108,22 +129,24 @@ function animate() {
 }
 ```
 
-> 📌 **Note:** The canvas is cleared to black at the start of each Run. Animated sketches should repaint or clear every frame.
+> **Note:** The canvas is cleared to black at the start of each Run. Animated sketches should
+> repaint or clear every frame.
 
 ---
 
-<a id="-sketch-authoring-rules"></a>
 ## 📜 Sketch Authoring Rules
 
-> FengACS is a **canvas-only** studio. A sketch owns exactly one thing: *what gets painted into `ctx` this frame.*
+FengACS is a **canvas-only** studio. A sketch owns exactly one thing: *what gets painted into `ctx`
+this frame.*
 
-### ✅ The runtime contract
+### Runtime Contract
 
 - You are given `canvas`, `ctx`, `width`, `height`, `t`, `dt`, `frame`.
-- Define **only** `function animate() { … }` — no own `requestAnimationFrame` loop, no `canvas.getContext('2d')`.
+- Define **only** `function animate() { … }` — no own `requestAnimationFrame` loop, no
+  `canvas.getContext('2d')`.
 - Origin `(0, 0)` is the **top-left**; `x` grows right, `y` grows down.
 
-### 🚫 Do not touch the DOM
+### Do not touch the DOM
 
 | ❌ Forbidden | ✅ Use instead |
 | :--- | :--- |
@@ -134,11 +157,12 @@ function animate() {
 | Flex / grid layout | Explicit pixel maths from `width` / `height` |
 | Own animation timing | `t`, `dt`, `frame` supplied by the host |
 
-> ⚠️ **Why so strict?** The export path is `canvas.captureStream()` + `MediaRecorder`, which captures **the canvas pixels and nothing else**. Any DOM overlay silently vanishes from the downloaded `.webm`.
+> ⚠️ **Why so strict?** The export path is `canvas.captureStream()` + `MediaRecorder`, which captures
+> **the canvas pixels and nothing else**. Any DOM overlay silently vanishes from the downloaded `.webm`.
 
 ### ✅ Checklist before you press Record
 
-- [ ] Does the sketch consist of one `animate()` function (plus optional top-level state)?
+- [x] Does the sketch consist of one `animate()` function (plus optional top-level state)?
 - [ ] Is every visible pixel drawn through `ctx`?
 - [ ] Are positions computed from `width` / `height` rather than hard-coded?
 - [ ] Do you clear or repaint each frame, so nothing leaks from the previous one?
@@ -146,15 +170,15 @@ function animate() {
 
 ---
 
-<a id="️-frame-loop--fps-target"></a>
-## ⚙️ Frame Loop & FPS Target
+## ⚙️ Frame Loop & FPS Governor
 
 Rendering uses `requestAnimationFrame` behind a **fixed-interval gate**:
 
-```text
-next_frame += 1000 / FPS         # accumulate the next permitted frame time
-if (now - next_frame > 2 ticks)  # fell too far behind (tab switch / GC pause)?
-    next_frame = now             # snap back to "now" instead of bursting frames
+```js
+next_frame += 1000 / FPS;          // accumulate the next permitted frame time
+if (now - next_frame > 2 ticks) {  // fell too far behind (tab switch / GC pause)?
+  next_frame = now;                // snap back to "now" instead of bursting frames
+}
 ```
 
 - Choosing `60` on a 144 Hz monitor still yields a steady **60 FPS**.
@@ -163,7 +187,6 @@ if (now - next_frame > 2 ticks)  # fell too far behind (tab switch / GC pause)?
 
 ---
 
-<a id="️-settings"></a>
 ## 🎛️ Settings
 
 | Control | Range / Values | Default | Effect |
@@ -172,47 +195,58 @@ if (now - next_frame > 2 ticks)  # fell too far behind (tab switch / GC pause)?
 | **H** | `100 – 2160` | `720` | Canvas height in pixels |
 | **FPS** | `24 / 30 / 60 / 120 / 144` | `60` | Target render cadence + `captureStream()` |
 
-> ⚠️ Changing **W / H / FPS** while running re-shows **Run** — press it again to restart with the new settings.
+> ⚠️ Changing **W / H / FPS** while running re-shows **Run** — press it again to restart with the
+> new settings.
 
 ---
 
-<a id="-recording--export"></a>
-## 📼 Recording & Export
+## 📼 Recording & Export Pipeline
 
-**Record** restarts the sketch from `t = 0`, attaches a `MediaRecorder`, and starts capturing — a clean, deterministic take every time.
+**Record** restarts the sketch from `t = 0`, attaches a `MediaRecorder`, and starts capturing — a
+clean, deterministic take every time.
 
 | Aspect | Behaviour |
 | :--- | :--- |
 | Stream source | `canvas.captureStream(targetFPS)` |
 | Codec order | `vp9` → `vp8` → `video/webm` (first supported wins) |
 | Bitrate | `8,000,000` bits/s |
-| Chunking | 100 ms `timeslice`, buffered into a `Blob` |
+| Chunking | `100 ms` timeslice, buffered into a `Blob` |
 | Output | `animation_<epoch-ms>.webm` |
+
+```mermaid
+flowchart LR
+    A[Editor] -->|evaluate once| B[animate]
+    B --> C[ctx draws]
+    C --> D[Canvas]
+    D -->|captureStream FPS| E[MediaRecorder]
+    E -->|timeslice 100ms| F[Blob]
+    F -->|download| G[animation_*.webm]
+    style A fill:#161b22,stroke:#1f6feb
+    style G fill:#0d4429,stroke:#3fb950
+```
 
 ---
 
-<a id="️-interface-reference"></a>
 ## 🖥️ Interface Reference
 
 | Zone | Description |
 | :--- | :--- |
 | **Top bar** | Size + FPS inputs, **Run**, **Clear**, **Record**, **Download** |
-| **Editor** | Monospace textarea, `Tab` → 2-space indent, placeholder hints |
+| **Editor** | Monospace textarea, <kbd>Tab</kbd> → 2-space indent, placeholder hints |
 | **Preview** | Auto-fitted canvas + FPS overlay + recording overlay |
 | **Status bar** | Status dot, frame counter, elapsed time |
-| **Toasts** | Slide-in confirmations, auto-dismiss after 2.5 s |
+| **Toasts** | Slide-in confirmations, auto-dismiss after `2.5 s` |
 
 ### ⌨️ Keyboard shortcuts
 
 | Keys | Action |
 | :--- | :--- |
-| <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>Enter</kbd> | Run sketch |
+| <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> | Run sketch |
 | <kbd>Tab</kbd> | Insert two spaces |
 
 ---
 
-<a id="-included-example--perftestjs"></a>
-## 📊 Included Example — `example/PERFTEST.js`
+## 📊 Included Example — PERFTEST.js
 
 A self-benchmarking sketch that doubles as a stress test and an API showcase:
 
@@ -221,11 +255,40 @@ A self-benchmarking sketch that doubles as a stress test and an API showcase:
 3. **Numeric HUD** — FPS avg / current / min / max, frame-time stats, heap, GC events, elapsed time.
 4. **Two mini graphs** — a 120-sample frame-time plot and a 120-sample draw-time plot.
 
-> 📌 `HEAP` / GC fields rely on `performance.memory`, which is **Chromium-only** — they report zeros elsewhere.
+> 📌 `HEAP` / GC fields rely on `performance.memory`, which is **Chromium-only** — they report zeros
+> elsewhere.
 
 ---
 
-<a id="-browser-support"></a>
+## 🏗️ Architecture
+
+```mermaid
+flowchart TD
+    subgraph SingleFile["FengACS.html (no imports)"]
+        UI[Top Bar / Editor / Toasts]
+        LOOP[RAF + fixed-interval gate]
+        EVAL[Evaluator]
+        REC[MediaRecorder wrapper]
+        TEL[Telemetry overlay]
+    end
+
+    EVAL -->|looks for animate| LOOP
+    LOOP -->|calls per frame| CANVAS[Canvas 2D]
+    TEL -.->|reads frame stats| CANVAS
+    REC -.->|captureStream| CANVAS
+    UI -->|W / H / FPS / Run / Record| LOOP
+```
+
+| Layer | Responsibility |
+| :--- | :--- |
+| `Evaluator` | Runs the sketch body once, locates `animate()`. |
+| `Frame governor` | Enforces the target FPS with drift correction. |
+| `Renderer` | Provides `ctx` + auto-fits the canvas. |
+| `Recorder` | Streams canvas frames into a WebM blob. |
+| `Telemetry` | Reports measured FPS / frame / elapsed time. |
+
+---
+
 ## 🌐 Browser Support
 
 | Capability | Requirement |
@@ -236,10 +299,10 @@ A self-benchmarking sketch that doubles as a stress test and an API showcase:
 
 ---
 
-<a id="️-known-limitations"></a>
 ## ⚠️ Known Limitations
 
-- 🛡️ **The evaluator is a convenience, not a security boundary** — no iframe, no worker, no sandbox. *Do not paste untrusted code.*
+- 🛡️ **The evaluator is a convenience, not a security boundary** — no iframe, no worker, no sandbox.
+  *Do not paste untrusted code.*
 - 💾 **No persistence** — a page reload loses your sketch.
 - 🐛 **Errors inside `animate()` aren't caught per frame** — they surface in the console.
 - 🎨 **2D context only** — no WebGL / WebGPU helper surface.
@@ -247,64 +310,72 @@ A self-benchmarking sketch that doubles as a stress test and an API showcase:
 
 ---
 
-<a id="-project-structure"></a>
+## 🗺️ Roadmap
+
+- [x] Single-file IDE with live split-pane preview
+- [x] FPS governor & WebM export
+- [x] Performance-telemetry example sketch
+- [ ] Persist sketches to `localStorage`; add save / load / share-as-URL
+- [ ] **WebGL / OffscreenCanvas** renderer + context selector
+- [ ] Expose bitrate, codec, and container (MP4 where supported)
+- [ ] *"Record N seconds then auto-stop"* for deterministic clip lengths
+- [ ] Inject a small helper layer (shapes, easing, noise) into the sandbox
+
+---
+
 ## 📁 Project Structure
 
-```text
+```
 FengACS/
 ├── FengACS.html        # the entire application — editor, renderer, recorder, UI
 ├── README.md
-└── example/
-    └── PERFTEST.js     # example sketch: performance telemetry dashboard
+├── LICENSE
+├── example/
+│   └── PERFTEST.js     # example sketch: performance telemetry dashboard
+└── more/
+    ├── fullscreen-toggle.js   # optional: toggle fullscreen preview
+    ├── lang-pack-global.js    # optional: global language pack
+    └── theme-bg.js            # optional: theme background switcher
 ```
 
 ---
 
-<a id="-ideas-for-extension"></a>
-## 💡 Ideas for Extension
+## 🤝 Contributing
 
-- [ ] Persist sketches to `localStorage`, add save / load / share-as-URL.
-- [ ] Add a **WebGL / OffscreenCanvas** renderer + context selector.
-- [ ] Expose bitrate, codec, and container (MP4 where supported).
-- [ ] Add *"record N seconds then auto-stop"* for deterministic clip lengths.
-- [ ] Inject a small helper layer (shapes, easing, noise) into the sandbox.
+Contributions are welcome. Please keep the philosophy intact:
 
----
+1. **One file, zero deps** — no build step, no package manager, no CDN.
+2. **Canvas-only surface** — the exported `.webm` must contain exactly what you see.
+3. **Backwards compatible** — existing sketches must keep running unchanged.
 
-<div align="center">
-
-```text
-┌─────────────────────────────────────────────────────┐
-│   F e n g A C S  ·  W r i t e .  R e n d e r .       │
-│   R e c o r d .  E x p o r t .                      │
-└─────────────────────────────────────────────────────┘
-```
-
-<sub>FengACS — Feng Animation Code Studio · <sup>zero-dependency · single-file</sup></sub>
-
-</div>
+Report bugs, request features, or open a pull request in the
+[issues tab](https://github.com/FengPwner/FengACS/issues).
 
 ---
 
-<a id="-author"></a>
 ## 👤 Author
 
-**FengPwner** — [github.com/FengPwner](https://github.com/FengPwner)
+**FengPwner** — <https://github.com/FengPwner>
+
+> *Stay curious, stay sharp — and always animate with authorization.* [^1]
+
+[^1]: A nod to the security-engineering credo the author lives by.
 
 ---
 
-<a id="-license"></a>
 ## 📄 License
 
-> ⚠️ **No license file has been added yet** — the default GitHub *"all rights reserved"* terms currently apply.
-> Add a `LICENSE` file if you intend to open it up.
+> **No license file has been added yet** — the default GitHub *"all rights reserved"* terms currently
+> apply. Add a `LICENSE` file if you intend to open it up.
 
 ---
 
-<div align="center">
+<sub>FengACS — Feng Animation Code Studio · zero-dependency · single-file · H~2~O-of-simplicity ·
+E=mc^2^-of-efficiency</sub>
 
-*Stay curious, stay sharp — and always animate with authorization.*
-
-[⬆️ Back to top](#-highlights)
-
-</div>
+```
+┌─────────────────────────────────────────────────────┐
+│  F e n g A C S  ·  W r i t e . R e n d e r .       │
+│  R e c o r d .  E x p o r t .                       │
+└─────────────────────────────────────────────────────┘
+```
