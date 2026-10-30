@@ -365,8 +365,7 @@ Report bugs, request features, or open a pull request in the
 
 ## 📄 License
 
-> **No license file has been added yet** — the default GitHub *"all rights reserved"* terms currently
-> apply. Add a `LICENSE` file if you intend to open it up.
+To see [License](https://github.com/FengPwner/FengACS/blob/main/LICENSE)
 
 ---
 
