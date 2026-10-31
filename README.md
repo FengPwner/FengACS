@@ -25,7 +25,7 @@
 
 ---
 
-## 🔗 Table of Contents
+## Table of Contents
 
 - [Highlights](#-highlights)
 - [Quick Start](#-quick-start)
@@ -51,7 +51,7 @@
 
 ---
 
-## ✨ Highlights
+## Highlights
 
 | Capability | What you get |
 | :--- | :--- |
@@ -65,7 +65,7 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Download or clone** this repository.
 
@@ -94,12 +94,12 @@
 
 4. Press **Run** (or <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>), then **Record** → **Stop** → **Download**.
 
-> 💡 Want something meatier? Load `example/PERFTEST.js` and paste it into the editor — it doubles as
+> Want something meatier? Load `example/PERFTEST.js` and paste it into the editor — it doubles as
 > a stress test *and* an API showcase.
 
 ---
 
-## 🧠 The Sketch API
+## The Sketch API
 
 Your editor contents are evaluated **once per Run**. FengACS then looks for `animate()` and calls it
 once per rendered frame.
@@ -134,7 +134,7 @@ function animate() {
 
 ---
 
-## 📜 Sketch Authoring Rules
+## Sketch Authoring Rules
 
 FengACS is a **canvas-only** studio. A sketch owns exactly one thing: *what gets painted into `ctx`
 this frame.*
@@ -157,10 +157,10 @@ this frame.*
 | Flex / grid layout | Explicit pixel maths from `width` / `height` |
 | Own animation timing | `t`, `dt`, `frame` supplied by the host |
 
-> ⚠️ **Why so strict?** The export path is `canvas.captureStream()` + `MediaRecorder`, which captures
+> **Why so strict?** The export path is `canvas.captureStream()` + `MediaRecorder`, which captures
 > **the canvas pixels and nothing else**. Any DOM overlay silently vanishes from the downloaded `.webm`.
 
-### ✅ Checklist before you press Record
+### Checklist before you press Record
 
 - [x] Does the sketch consist of one `animate()` function (plus optional top-level state)?
 - [ ] Is every visible pixel drawn through `ctx`?
@@ -170,7 +170,7 @@ this frame.*
 
 ---
 
-## ⚙️ Frame Loop & FPS Governor
+## Frame Loop & FPS Governor
 
 Rendering uses `requestAnimationFrame` behind a **fixed-interval gate**:
 
@@ -187,7 +187,7 @@ if (now - next_frame > 2 ticks) {  // fell too far behind (tab switch / GC pause
 
 ---
 
-## 🎛️ Settings
+## Settings
 
 | Control | Range / Values | Default | Effect |
 | :--- | :--- | :--- | :--- |
@@ -195,12 +195,12 @@ if (now - next_frame > 2 ticks) {  // fell too far behind (tab switch / GC pause
 | **H** | `100 – 2160` | `720` | Canvas height in pixels |
 | **FPS** | `24 / 30 / 60 / 120 / 144` | `60` | Target render cadence + `captureStream()` |
 
-> ⚠️ Changing **W / H / FPS** while running re-shows **Run** — press it again to restart with the
+> Changing **W / H / FPS** while running re-shows **Run** — press it again to restart with the
 > new settings.
 
 ---
 
-## 📼 Recording & Export Pipeline
+## Recording & Export Pipeline
 
 **Record** restarts the sketch from `t = 0`, attaches a `MediaRecorder`, and starts capturing — a
 clean, deterministic take every time.
@@ -227,7 +227,7 @@ flowchart LR
 
 ---
 
-## 🖥️ Interface Reference
+## Interface Reference
 
 | Zone | Description |
 | :--- | :--- |
@@ -237,7 +237,7 @@ flowchart LR
 | **Status bar** | Status dot, frame counter, elapsed time |
 | **Toasts** | Slide-in confirmations, auto-dismiss after `2.5 s` |
 
-### ⌨️ Keyboard shortcuts
+### Keyboard shortcuts
 
 | Keys | Action |
 | :--- | :--- |
@@ -246,7 +246,7 @@ flowchart LR
 
 ---
 
-## 📊 Included Example — PERFTEST.js
+## Included Example — PERFTEST.js
 
 A self-benchmarking sketch that doubles as a stress test and an API showcase:
 
@@ -255,12 +255,12 @@ A self-benchmarking sketch that doubles as a stress test and an API showcase:
 3. **Numeric HUD** — FPS avg / current / min / max, frame-time stats, heap, GC events, elapsed time.
 4. **Two mini graphs** — a 120-sample frame-time plot and a 120-sample draw-time plot.
 
-> 📌 `HEAP` / GC fields rely on `performance.memory`, which is **Chromium-only** — they report zeros
+> `HEAP` / GC fields rely on `performance.memory`, which is **Chromium-only** — they report zeros
 > elsewhere.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart TD
@@ -289,7 +289,7 @@ flowchart TD
 
 ---
 
-## 🌐 Browser Support
+## Browser Support
 
 | Capability | Requirement |
 | :--- | :--- |
@@ -299,18 +299,18 @@ flowchart TD
 
 ---
 
-## ⚠️ Known Limitations
+## Known Limitations
 
-- 🛡️ **The evaluator is a convenience, not a security boundary** — no iframe, no worker, no sandbox.
+- **The evaluator is a convenience, not a security boundary** — no iframe, no worker, no sandbox.
   *Do not paste untrusted code.*
-- 💾 **No persistence** — a page reload loses your sketch.
-- 🐛 **Errors inside `animate()` aren't caught per frame** — they surface in the console.
-- 🎨 **2D context only** — no WebGL / WebGPU helper surface.
-- 📦 **Fixed export** — 8 Mbps WebM, no MP4 / GIF / MOV path.
+- **No persistence** — a page reload loses your sketch.
+- **Errors inside `animate()` aren't caught per frame** — they surface in the console.
+- **2D context only** — no WebGL / WebGPU helper surface.
+- **Fixed export** — 8 Mbps WebM, no MP4 / GIF / MOV path.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [x] Single-file IDE with live split-pane preview
 - [x] FPS governor & WebM export
@@ -323,24 +323,7 @@ flowchart TD
 
 ---
 
-## 📁 Project Structure
-
-```
-FengACS/
-├── FengACS.html        # the entire application — editor, renderer, recorder, UI
-├── README.md
-├── LICENSE
-├── example/
-│   └── PERFTEST.js     # example sketch: performance telemetry dashboard
-└── more/
-    ├── fullscreen-toggle.js   # optional: toggle fullscreen preview
-    ├── lang-pack-global.js    # optional: global language pack
-    └── theme-bg.js            # optional: theme background switcher
-```
-
----
-
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome. Please keep the philosophy intact:
 
@@ -353,7 +336,7 @@ Report bugs, request features, or open a pull request in the
 
 ---
 
-## 👤 Author
+## Author
 
 **FengPwner** — <https://github.com/FengPwner>
 
@@ -363,14 +346,12 @@ Report bugs, request features, or open a pull request in the
 
 ---
 
-## 📄 License
+## License
 
 To see [License](https://github.com/FengPwner/FengACS/blob/main/LICENSE)
 
 ---
 
-<sub> FengACS — Feng Animation Code Studio · zero-dependency · single-file · H~2~O-of-simplicity ·
-E=mc^2^-of-efficiency </sub>
 
 ```
 ┌─────────────────────────────────────────────────────┐
