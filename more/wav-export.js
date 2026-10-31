@@ -1,39 +1,26 @@
 (function () {
   let bound = false;
-  let audioCtx = null;
+  let capturedCtx = null;
+  let captureDest = null;
 
-  function hookAudioContext() {
-    if (window.AudioContext && !window.AudioContext.__fengacsWav) {
-      const OrigAC = window.AudioContext;
-      function HijackedAC(opts) {
-        const ctx = new OrigAC(opts);
-        window.__fengACS_audioCtx = ctx;
-        return ctx;
-      }
-      HijackedAC.prototype = OrigAC.prototype;
-      HijackedAC.__fengacsWav = true;
-      window.AudioContext = HijackedAC;
-    }
-    if (window.webkitAudioContext && !window.webkitAudioContext.__fengacsWav) {
-      const OrigAC = window.webkitAudioContext;
-      function HijackedAC(opts) {
-        const ctx = new OrigAC(opts);
-        window.__fengACS_audioCtx = ctx;
-        return ctx;
-      }
-      HijackedAC.prototype = OrigAC.prototype;
-      HijackedAC.__fengacsWav = true;
-      window.webkitAudioContext = HijackedAC;
-    }
-  }
-
-  function ensureCtx() {
-    if (window.__fengACS_audioCtx) return window.__fengACS_audioCtx;
+  function patchAudioContext() {
     const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return null;
-    const ctx = new AC();
-    window.__fengACS_audioCtx = ctx;
-    return ctx;
+    if (!AC || AC.__fengacsWavPatched) return;
+
+    const origCreateGain = AC.prototype.createGain;
+    AC.prototype.createGain = function () {
+      const gain = origCreateGain.call(this);
+      try {
+        if (!capturedCtx || capturedCtx !== this) {
+          capturedCtx = this;
+          captureDest = this.createMediaStreamDestination();
+        }
+        gain.connect(captureDest);
+      } catch (_) {}
+      return gain;
+    };
+
+    AC.__fengacsWavPatched = true;
   }
 
   function encodeWav(samples, sampleRate) {
@@ -74,48 +61,6 @@
     return new Blob([buffer], { type: 'audio/wav' });
   }
 
-  async function renderWavFromContext(ctx, duration) {
-    const sampleRate = ctx.sampleRate;
-    const length = Math.ceil(sampleRate * duration);
-    const offline = new OfflineAudioContext(1, length, sampleRate);
-
-    const dest = ctx.destination;
-    const stream = dest.stream;
-
-    if (!stream) throw new Error('No audio stream available. Play the animation first.');
-
-    const source = offline.createBufferSource();
-    const mediaStream = stream;
-
-    const audioTracks = mediaStream.getAudioTracks();
-    if (!audioTracks.length) throw new Error('No audio track in the stream.');
-
-    return new Promise((resolve, reject) => {
-      const recorder = new MediaRecorder(mediaStream, { mimeType: 'audio/webm' });
-      const chunks = [];
-      recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-      recorder.onstop = async () => {
-        try {
-          const blob = new Blob(chunks, { type: 'audio/webm' });
-          const arrayBuf = await blob.arrayBuffer();
-          const decodeCtx = new AudioContext();
-          const audioBuf = await decodeCtx.decodeAudioData(arrayBuf);
-          const samples = audioBuf.getChannelData(0);
-          const wavBlob = encodeWav(samples, audioBuf.sampleRate);
-          downloadWav(wavBlob);
-          decodeCtx.close();
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      };
-      recorder.start();
-      setTimeout(() => {
-        if (recorder.state === 'recording') recorder.stop();
-      }, duration * 1000);
-    });
-  }
-
   function downloadWav(blob) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -130,19 +75,13 @@
     const btn = document.getElementById('wav-download-btn');
     if (!btn) return;
 
-    const ctx = ensureCtx();
-    if (!ctx) {
-      alert('No AudioContext available. Play the animation first.');
+    if (!capturedCtx || !captureDest) {
+      alert('No audio captured yet. Play the animation first.');
       return;
     }
 
-    if (ctx.state === 'suspended') {
-      try { await ctx.resume(); } catch (_) {}
-    }
-
-    if (!ctx.destination.stream) {
-      alert('No audio stream available. Play the animation first.');
-      return;
+    if (capturedCtx.state === 'suspended') {
+      try { await capturedCtx.resume(); } catch (_) {}
     }
 
     const duration = parseFloat(document.getElementById('recMaxDur')?.value) || 5;
@@ -152,7 +91,40 @@
     btn.textContent = 'Recording...';
 
     try {
-      await renderWavFromContext(ctx, effectiveDuration);
+      const stream = captureDest.stream;
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      const chunks = [];
+      recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+
+      const done = new Promise((resolve, reject) => {
+        recorder.onstop = async () => {
+          try {
+            const blob = new Blob(chunks, { type: 'audio/webm' });
+            const arrayBuf = await blob.arrayBuffer();
+            const decodeCtx = new AudioContext();
+            const audioBuf = await decodeCtx.decodeAudioData(arrayBuf);
+            const samples = audioBuf.getChannelData(0);
+            const wavBlob = encodeWav(samples, audioBuf.sampleRate);
+            downloadWav(wavBlob);
+            decodeCtx.close();
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        };
+        recorder.onerror = (e) => reject(e.error);
+      });
+
+      recorder.start();
+      setTimeout(() => {
+        if (recorder.state === 'recording') recorder.stop();
+      }, effectiveDuration * 1000);
+
+      await done;
       btn.textContent = 'WAV Saved';
       setTimeout(() => { btn.textContent = 'Download WAV'; btn.disabled = false; }, 1500);
     } catch (err) {
@@ -180,7 +152,7 @@
   function injectOnce() {
     if (bound) return;
     bound = true;
-    hookAudioContext();
+    patchAudioContext();
     addButton();
   }
 
