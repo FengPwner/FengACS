@@ -369,8 +369,8 @@ To see [License](https://github.com/FengPwner/FengACS/blob/main/LICENSE)
 
 ---
 
-<sub>FengACS — Feng Animation Code Studio · zero-dependency · single-file · H~2~O-of-simplicity ·
-E=mc^2^-of-efficiency</sub>
+<sub> FengACS — Feng Animation Code Studio · zero-dependency · single-file · H~2~O-of-simplicity ·
+E=mc^2^-of-efficiency </sub>
 
 ```
 ┌─────────────────────────────────────────────────────┐
