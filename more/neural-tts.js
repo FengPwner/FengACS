@@ -2,6 +2,7 @@
   let audioCtx = null;
   let currentAudio = null;
   let bound = false;
+  let origSpeakRef = null;
 
   const VOICES = [
     { id: 'zh-CN-XiaoxiaoNeural', name: '晓晓 (Chinese, Female)' },
@@ -66,6 +67,23 @@
     return audioCtx;
   }
 
+  function showToast(msg, type) {
+    const n = document.getElementById('toast');
+    if (!n) return;
+    n.textContent = msg;
+    n.className = 'toast show ' + (type || '');
+    setTimeout(() => { n.className = 'toast'; }, 3000);
+  }
+
+  function fallbackSpeak(text) {
+    if (!origSpeakRef) return;
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      origSpeakRef(u);
+    } catch (_) {}
+  }
+
   async function synthesize(text, voiceId) {
     const wsUrl = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4';
     return new Promise((resolve, reject) => {
@@ -88,7 +106,8 @@
 
         const langMatch = voiceId.match(/^([a-z]{2}-[A-Z]{2})/);
         const lang = langMatch ? langMatch[1] : 'en-US';
-        const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='${lang}'><voice name='${voiceId}'><prosody rate='+0%' pitch='+0Hz'>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</prosody></voice></speak>`;
+        const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='${lang}'><voice name='${voiceId}'><prosody rate='+0%' pitch='+0Hz'>${safeText}</prosody></voice></speak>`;
         const ssmlMsg = `X-RequestId:${crypto.randomUUID()}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${ts}Z\r\nPath:ssml\r\n\r\n${ssml}`;
         ws.send(ssmlMsg);
       };
@@ -129,12 +148,8 @@
       await audio.play();
     } catch (err) {
       console.error('[neural-tts]', err);
-      const n = document.getElementById('toast');
-      if (n) {
-        n.textContent = 'TTS failed: ' + err.message;
-        n.className = 'toast show error';
-        setTimeout(() => { n.className = 'toast'; }, 3000);
-      }
+      showToast('Neural TTS failed, fallback to local: ' + err.message, 'error');
+      fallbackSpeak(text);
     }
   }
 
@@ -143,17 +158,33 @@
     if (!window.speechSynthesis) return;
     bound = true;
 
-    const origSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
+    origSpeakRef = window.speechSynthesis.speak.bind(window.speechSynthesis);
+
     window.speechSynthesis.speak = function (utterance) {
       if (FengACS.getSetting('neuralTts') !== 'on') {
-        return origSpeak(utterance);
+        return origSpeakRef(utterance);
       }
       if (utterance && utterance.text) {
         speak(utterance.text);
+        return;
       }
+      return origSpeakRef(utterance);
     };
 
     window.neuralSpeak = speak;
+    window.__neuralTtsFallback = fallbackSpeak;
+  }
+
+  function unlockAudioOnFirstGesture() {
+    const unlock = () => {
+      ensureAudio();
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('keydown', unlock);
+      document.removeEventListener('touchstart', unlock);
+    };
+    document.addEventListener('click', unlock);
+    document.addEventListener('keydown', unlock);
+    document.addEventListener('touchstart', unlock);
   }
 
   FengACS.registerExtension({
@@ -184,6 +215,8 @@
       hookSpeechSynthesis();
     }
   });
+
+  unlockAudioOnFirstGesture();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', hookSpeechSynthesis);
