@@ -1,140 +1,70 @@
 (function () {
-  let ffmpeg = null;
-  let loading = false;
-  let bound = false;
+  function showInfoDialog() {
+    if (document.getElementById('mp4-info-overlay')) return;
 
-  function hookMediaRecorder() {
-    if (window.MediaRecorder && window.MediaRecorder.__fengacs) return;
-    const Orig = window.MediaRecorder;
-    if (!Orig) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'mp4-info-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10002;display:flex;align-items:center;justify-content:center;padding:20px';
 
-    function Hijacked(stream, opts) {
-      const inst = new Orig(stream, opts);
-      const chunks = [];
-      inst.addEventListener('dataavailable', function (e) {
-        if (e.data && e.data.size) chunks.push(e.data);
-      });
-      inst.addEventListener('stop', function () {
-        const mime = (opts && opts.mimeType) || 'video/webm';
-        window.__fengACS_lastBlob = new Blob(chunks, { type: mime });
-      });
-      return inst;
-    }
-    Hijacked.isTypeSupported = Orig.isTypeSupported.bind(Orig);
-    Hijacked.__fengacs = true;
-    window.MediaRecorder = Hijacked;
-  }
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#111128;border:2px solid #e94560;padding:24px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;color:#ccc;font-size:13px;line-height:1.8';
 
-  async function loadFFmpeg() {
-    if (ffmpeg) return ffmpeg;
-    if (loading) {
-      while (loading) await new Promise(r => setTimeout(r, 100));
-      return ffmpeg;
-    }
-    loading = true;
-    try {
-      const { FFmpeg } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js');
-      const { toBlobURL } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js');
-      const inst = new FFmpeg();
-      const base = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
-      await inst.load({
-        coreURL: await toBlobURL(base + '/ffmpeg-core.js', 'text/javascript'),
-        wasmURL: await toBlobURL(base + '/ffmpeg-core.wasm', 'application/wasm')
-      });
-      ffmpeg = inst;
-      return inst;
-    } finally {
-      loading = false;
-    }
-  }
+    const title = document.createElement('div');
+    title.textContent = 'MP4 Recording — Not Available';
+    title.style.cssText = 'color:#e94560;font-size:16px;font-weight:700;margin-bottom:14px';
 
-  function toast(msg, type) {
-    const n = document.getElementById('toast');
-    if (!n) return;
-    n.textContent = msg;
-    n.className = 'toast show ' + (type || '');
-    setTimeout(() => { n.className = 'toast'; }, 3000);
-  }
+    const body = document.createElement('div');
+    body.innerHTML = [
+      '<p style="margin-bottom:10px">MP4 recording is not supported as an offline feature in the current architecture.</p>',
+      '<p style="margin-bottom:10px">The browser does not ship an MP4 (H.264) encoder by default. MediaRecorder can only produce WebM in most Chromium builds. Converting WebM to MP4 in the browser requires ffmpeg.wasm, which needs a ~25MB core download from a CDN and cannot be bundled into a single extension file.</p>',
+      '<p style="margin-bottom:10px">Therefore, WebM remains the default and only recording format in FengACS.</p>',
+      '<p style="margin-bottom:10px"><b style="color:#e0e0e0">If your target software requires MP4:</b></p>',
+      '<ul style="margin:0 0 10px 20px;padding:0">',
+      '<li style="margin-bottom:6px">Record as WebM in FengACS.</li>',
+      '<li style="margin-bottom:6px">Convert the WebM file to MP4 with a desktop tool such as HandBrake, uTools file converter, or a local FFmpeg build.</li>',
+      '<li>This is reliable and fully offline on your side.</li>',
+      '</ul>',
+      '<p style="margin-bottom:10px"><b style="color:#e0e0e0">Check native MP4 support in your browser:</b></p>',
+      '<p style="margin-bottom:10px;background:#0a0a15;padding:8px 10px;font-family:monospace;font-size:12px;color:#00b894;border-left:3px solid #00b894">MediaRecorder.isTypeSupported(\'video/mp4;codecs=avc1\')</p>',
+      '<p style="margin-bottom:10px">If it returns <b style="color:#00b894">true</b>, your browser can record MP4 natively and you can request it directly in the recording settings.</p>',
+      '<p>If it returns <b style="color:#e74c3c">false</b>, native MP4 is not available and desktop conversion is recommended.</p>'
+    ].join('');
 
-  async function convertToMp4(webmBlob) {
-    const ff = await loadFFmpeg();
-    toast('Converting to MP4...');
-    const input = new Uint8Array(await webmBlob.arrayBuffer());
-    await ff.writeFile('in.webm', input);
-    await ff.exec(['-i', 'in.webm', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23', '-pix_fmt', 'yuv420p', '-movflags', 'faststart', 'out.mp4']);
-    const data = await ff.readFile('out.mp4');
-    await ff.deleteFile('in.webm');
-    await ff.deleteFile('out.mp4');
-    return new Blob([data.buffer], { type: 'video/mp4' });
-  }
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:18px';
 
-  function bindDownload() {
-    if (bound) return;
-    const btn = document.getElementById('downloadBtn');
-    if (!btn) return;
-    bound = true;
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Got it';
+    closeBtn.style.cssText = 'padding:6px 18px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:#e94560;color:#fff';
+    closeBtn.onclick = function () { overlay.remove(); };
 
-    const orig = btn.onclick;
-    btn.onclick = async function (e) {
-      const isImage = document.getElementById('mImg') && document.getElementById('mImg').checked;
-      if (isImage || FengACS.getSetting('mp4Record') !== 'on') {
-        if (orig) return orig.call(this, e);
-        return;
-      }
+    actions.appendChild(closeBtn);
+    box.appendChild(title);
+    box.appendChild(body);
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 
-      e.stopPropagation();
-      const blob = window.__fengACS_lastBlob;
-      if (!blob) {
-        toast('No recording available', 'error');
-        return;
-      }
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) overlay.remove();
+    });
 
-      try {
-        btn.disabled = true;
-        const old = btn.textContent;
-        btn.textContent = 'Converting...';
-        const mp4 = await convertToMp4(blob);
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(mp4);
-        a.download = 'recording_' + Date.now() + '.mp4';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-        toast('MP4 saved', 'success');
-        btn.textContent = old;
-      } catch (err) {
-        console.error(err);
-        toast('MP4 conversion failed: ' + err.message, 'error');
-        btn.textContent = 'Download';
-      } finally {
-        btn.disabled = false;
+    const onEsc = function (e) {
+      if (e.key === 'Escape') {
+        overlay.remove();
+        document.removeEventListener('keydown', onEsc);
       }
     };
+    document.addEventListener('keydown', onEsc);
   }
 
-  hookMediaRecorder();
-  bindDownload();
-
   FengACS.registerExtension({
-    id: 'mp4-record',
-    file: 'mp4-record.js',
+    id: 'mp4-info',
+    file: 'mp4-info.js',
     type: 'hook',
-    name: 'MP4 Recording',
-    settings: [
-      {
-        key: 'mp4Record',
-        type: 'select',
-        label: 'MP4 Recording',
-        default: 'off',
-        options: [
-          { value: 'off', label: 'Off' },
-          { value: 'on', label: 'On (WebM → MP4)' }
-        ]
-      }
-    ],
+    name: 'MP4 Info',
     onFrame: function () {
-      bindDownload();
+      showInfoDialog();
     }
   });
 })();
