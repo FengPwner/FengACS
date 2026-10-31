@@ -1,7 +1,29 @@
 (function () {
   let ffmpeg = null;
   let loading = false;
-  let originalClick = null;
+  let bound = false;
+
+  function hookMediaRecorder() {
+    if (window.MediaRecorder && window.MediaRecorder.__fengacs) return;
+    const Orig = window.MediaRecorder;
+    if (!Orig) return;
+
+    function Hijacked(stream, opts) {
+      const inst = new Orig(stream, opts);
+      const chunks = [];
+      inst.addEventListener('dataavailable', function (e) {
+        if (e.data && e.data.size) chunks.push(e.data);
+      });
+      inst.addEventListener('stop', function () {
+        const mime = (opts && opts.mimeType) || 'video/webm';
+        window.__fengACS_lastBlob = new Blob(chunks, { type: mime });
+      });
+      return inst;
+    }
+    Hijacked.isTypeSupported = Orig.isTypeSupported.bind(Orig);
+    Hijacked.__fengacs = true;
+    window.MediaRecorder = Hijacked;
+  }
 
   async function loadFFmpeg() {
     if (ffmpeg) return ffmpeg;
@@ -46,29 +68,32 @@
     return new Blob([data.buffer], { type: 'video/mp4' });
   }
 
-  function interceptDownload() {
-    if (originalClick) return;
+  function bindDownload() {
+    if (bound) return;
     const btn = document.getElementById('downloadBtn');
     if (!btn) return;
+    bound = true;
 
-    originalClick = btn.onclick;
+    const orig = btn.onclick;
     btn.onclick = async function (e) {
       const isImage = document.getElementById('mImg') && document.getElementById('mImg').checked;
       if (isImage || FengACS.getSetting('mp4Record') !== 'on') {
-        if (originalClick) return originalClick.call(this, e);
+        if (orig) return orig.call(this, e);
         return;
       }
 
       e.stopPropagation();
-      const url = window.__fengACS_recUrl;
-      if (!url) return;
+      const blob = window.__fengACS_lastBlob;
+      if (!blob) {
+        toast('No recording available', 'error');
+        return;
+      }
 
       try {
         btn.disabled = true;
+        const old = btn.textContent;
         btn.textContent = 'Converting...';
-        const resp = await fetch(url);
-        const webm = await resp.blob();
-        const mp4 = await convertToMp4(webm);
+        const mp4 = await convertToMp4(blob);
         const a = document.createElement('a');
         a.href = URL.createObjectURL(mp4);
         a.download = 'recording_' + Date.now() + '.mp4';
@@ -77,15 +102,19 @@
         a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
         toast('MP4 saved', 'success');
+        btn.textContent = old;
       } catch (err) {
         console.error(err);
         toast('MP4 conversion failed: ' + err.message, 'error');
+        btn.textContent = 'Download';
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Download';
       }
     };
   }
+
+  hookMediaRecorder();
+  bindDownload();
 
   FengACS.registerExtension({
     id: 'mp4-record',
@@ -105,7 +134,7 @@
       }
     ],
     onFrame: function () {
-      interceptDownload();
+      bindDownload();
     }
   });
 })();
